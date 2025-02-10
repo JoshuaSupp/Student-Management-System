@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import AdminNavbar from "../components/AdminNavbar";
 
 interface Student {
+  student_id: string,
   id: number;
   first_name: string;
   email: string;
@@ -38,6 +40,8 @@ function Edit() {
   }
 
   return (
+    <div>
+      <AdminNavbar/>
     <div className="container-fluid vw-100 vh-100 bg-primary d-flex justify-content-center align-items-center">
     <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
       <h2 className="text-center mb-4">Edit User</h2>
@@ -48,7 +52,20 @@ function Edit() {
       {data.length > 0 && (
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="first_name" className="form-label">Name</label>
+            <label htmlFor="student_id" className="form-label">Student ID</label>
+            <input
+              value={data[0].student_id}
+              type="text"
+              name="student_id"
+              className="form-control"
+              required
+              onChange={(e) => setData([{ ...data[0], student_id: e.target.value }])}
+              readOnly
+              style={{ cursor: "not-allowed" }}
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="first_name" className="form-label">First Name</label>
             <input
               value={data[0].first_name}
               type="text"
@@ -106,8 +123,8 @@ function Edit() {
         </form>
       )}
     </div>
+    </div>
   </div>
-  
   );
 }
 

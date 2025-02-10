@@ -5,6 +5,7 @@ import {Link, useNavigate} from 'react-router-dom'
 
 const CreateStudent = () => {
   const [values, setValues] = useState({
+    student_id: '',
     first_name: '',
     email: '',
     age: '',
@@ -22,9 +23,9 @@ function handleSubmit(e: { preventDefault: () => void }) {
   e.preventDefault();  // Prevent the default form submission
   console.log('Form submitted with values:', values);
 
-  axios.post('/api/add_user', values)
+  axios.post('/api/add_student', values)
       .then((res) => {
-          navigate('/');
+          navigate('/home');
           console.log(res);
       })
       .catch((err) => console.log(err));
@@ -37,10 +38,21 @@ function handleSubmit(e: { preventDefault: () => void }) {
         <h3 className="text-center text-primary mb-4">Add Student</h3>
         
         <div className="d-flex justify-content-end">
-            <Link to="/home" className="btn btn-outline-success btn-sm">🏠 Home</Link>
+            <Link to="/home" className="btn btn-outline-success btn-sm">🏠 Students</Link>
         </div>
         
         <form onSubmit={handleSubmit}>
+        <div className="form-group my-3">
+                <label htmlFor="student_id" className="fw-bold">Student ID</label>
+                <input 
+                    type="text" 
+                    name="student_id" 
+                    className="form-control" 
+                    placeholder="Enter student id" 
+                    required 
+                    onChange={(e) => setValues({ ...values, student_id: e.target.value })} 
+                />
+            </div>
             <div className="form-group my-3">
                 <label htmlFor="first_name" className="fw-bold">First Name</label>
                 <input 

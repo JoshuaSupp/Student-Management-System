@@ -27,8 +27,8 @@ db.connect((err) => {
     console.log('✅ Connected to MySQL Database!');
 });
 
-//API to add a user
-app.post('/add_user', (req, res) => {
+//API to add a student
+app.post('/api/add_student', (req, res) => {
     const { first_name, email, gender, age } = req.body;
 
     if (!first_name || !email || !gender || !age) {
@@ -45,8 +45,26 @@ app.post('/add_user', (req, res) => {
     });
 });
 
+//API to add a course
+app.post('/api/add_course', (req, res) => {
+  const { course_id, course_name } = req.body;
+
+  if (!course_id || !course_name) {
+      return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  const sql = 'INSERT INTO student_courses (course_id, course_name) VALUES (?, ?)';
+  db.query(sql, [course_id, course_name], (err, result) => {
+      if (err) {
+          console.error('❌ Error inserting course:', err);
+          return res.status(500).json({ message: 'Database error' });
+      }
+      res.status(201).json({ message: 'Course added successfully!', courseId: result.insertId });
+  });
+});
+
 //API to get all students
-app.get("/students", (req, res) => {
+app.get("/api/students", (req, res) => {
     const sql = "SELECT * FROM student_details";
     db.query(sql, (err, result) => {
       if (err) res.json({ message: "Server error" });
@@ -55,7 +73,7 @@ app.get("/students", (req, res) => {
   });
  
 //API to get specific student
-app.get("/get_student/:id", (req, res) => {
+app.get("/api/get_student/:id", (req, res) => {
     const id = req.params.id;
     const sql = "SELECT * FROM student_details WHERE `id`= ?";
     db.query(sql, [id], (err, result) => {
@@ -64,8 +82,17 @@ app.get("/get_student/:id", (req, res) => {
     });
   });
 
+//API to get all courses
+app.get("/api/admin_courses", (req, res) => {
+  const sql = "SELECT * FROM student_courses";
+  db.query(sql, (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
+  });
+});
+
 //API to edit student
-app.post("/edit_user/:id", (req, res) => {
+app.post("/api/edit_user/:id", (req, res) => {
     const id = req.params.id;
     const sql =
       "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=? WHERE id=?";
@@ -84,7 +111,7 @@ app.post("/edit_user/:id", (req, res) => {
   });
 
 //API to delete student
-app.delete("/delete/:id", (req, res) => {
+app.delete("/api/delete/:id", (req, res) => {
     const id = req.params.id;
     const sql = "DELETE FROM student_details WHERE id=?";
     const values = [id];
@@ -95,12 +122,10 @@ app.delete("/delete/:id", (req, res) => {
     });
   });
 
-
 //login with session
 const secretKey = process.env.JWT_SECRET_KEY;
-
-app.post("/login", (req, res) => {
-  console.log("Received body:", req.body); // Debugging
+app.post("/api/login", (req, res) => {
+  //console.log("Received body:", req.body); // Debugging
 
   const { email, password } = req.body;
 

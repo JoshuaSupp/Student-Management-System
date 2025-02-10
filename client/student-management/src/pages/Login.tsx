@@ -13,7 +13,7 @@ const Login = () => {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
 
-        axios.post("http://localhost:5000/login", { email, password })
+        axios.post("/api/login", { email, password })
             .then((res) => {
                 toast.success("Login Successful!", { position: "top-right", autoClose: 300 });
 
