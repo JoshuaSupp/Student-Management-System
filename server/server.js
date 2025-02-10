@@ -6,7 +6,9 @@ const app = express();
 app.use(express.json()); // Middleware to parse JSON requests
 app.use(cors()); // Enable CORS for frontend
 const bcrypt = require('bcryptjs');  // Use bcryptjs 
-// const jwt = require('jsonwebtoken'); // Ensure JWT is imported
+const jwt = require('jsonwebtoken'); // Ensure JWT is imported
+require('dotenv').config();  
+const jwtSecretKey = process.env.JWT_SECRET_KEY;
 
 //Create MySQL connection
 const db = mysql.createConnection({
@@ -68,9 +70,9 @@ app.post("/edit_user/:id", (req, res) => {
     const sql =
       "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=? WHERE id=?";
     const values = [
-      req.body.name,
+      req.body.first_name,
       req.body.email,
-      req.body.age,
+      req.body.age, 
       req.body.gender,
       id,
     ];
@@ -93,7 +95,10 @@ app.delete("/delete/:id", (req, res) => {
     });
   });
 
-// API for admin login (NO SESSION)
+
+//login with session
+const secretKey = process.env.JWT_SECRET_KEY;
+
 app.post("/login", (req, res) => {
   console.log("Received body:", req.body); // Debugging
 
@@ -117,14 +122,16 @@ app.post("/login", (req, res) => {
 
     // Compare passwords directly (plain text comparison)
     if (password === user.password) {
-      return res.json({ message: "Login successful" });
+      // Generate a JWT token with expiration time (e.g., 15 minutes)
+      const token = jwt.sign({ userId: user.id }, secretKey, { expiresIn: '15m' });
+
+      // Send the token back to the client
+      return res.json({ message: "Login successful", token });
     } else {
       return res.status(400).json({ message: "Incorrect password" });
     }
   });
 });
-
-
 
 // Start Server
 const PORT = 5000;

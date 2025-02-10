@@ -1,6 +1,8 @@
 import axios from 'axios';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
 
@@ -13,11 +15,19 @@ const Login = () => {
 
         axios.post("http://localhost:5000/login", { email, password })
             .then((res) => {
-                alert("Login Successful");
-                navigate("/home");
+                toast.success("Login Successful!", { position: "top-right", autoClose: 300 });
+
+                // Store the token in localStorage or sessionStorage
+                localStorage.setItem("token", res.data.token);
+                localStorage.setItem("token_expiry", (Date.now() + 15 * 60 * 1000).toString()); //  15 mins
+
+                // Delay navigation to allow toast to be visible
+                setTimeout(() => {
+                  navigate("/home");
+                }, 900);
             })
             .catch((error) => {
-                alert(error.response?.data?.message || "Try Again");
+                toast.error("Invalid email or password", { position: "top-right", autoClose: 600 });
                 console.error(error);
             });
     };
@@ -38,6 +48,7 @@ const Login = () => {
         </div>
         <button type="submit" className="btn btn-primary w-100 py-2 fw-bold">Login</button>
     </form>
+    <ToastContainer />
 </div>
 
     </div>

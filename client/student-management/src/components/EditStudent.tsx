@@ -18,6 +18,7 @@ function Edit() {
       .get(`/api/get_student/${id}`)
       .then((res) => {
         setData(res.data);
+        console.log("Students Data",res.data)
       })
       .catch((err) => console.log(err));
   }, [id]);
@@ -30,7 +31,7 @@ function Edit() {
     axios
       .post(`/api/edit_user/${id}`, data[0])
       .then((res) => {
-        navigate("/");
+        navigate("/home");
         console.log(res);
       })
       .catch((err) => console.log(err));
@@ -40,18 +41,18 @@ function Edit() {
     <div className="container-fluid vw-100 vh-100 bg-primary d-flex justify-content-center align-items-center">
     <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
       <h2 className="text-center mb-4">Edit User</h2>
-      <Link to="/" className="btn btn-outline-dark mb-3">
+      <Link to="/home" className="btn btn-outline-dark mb-3">
         ← Back
       </Link>
       
       {data.length > 0 && (
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="name" className="form-label">Name</label>
+            <label htmlFor="first_name" className="form-label">Name</label>
             <input
               value={data[0].first_name}
               type="text"
-              name="name"
+              name="first_name"
               className="form-control"
               required
               onChange={(e) => setData([{ ...data[0], first_name: e.target.value }])}
@@ -98,7 +99,7 @@ function Edit() {
             <button type="submit" className="btn btn-success">
               Save
             </button>
-            <Link to="/" className="btn btn-secondary">
+            <Link to="/home" className="btn btn-secondary">
               Cancel
             </Link>
           </div>
