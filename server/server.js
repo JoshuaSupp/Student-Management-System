@@ -12,8 +12,8 @@ const bcrypt = require('bcryptjs');  // Use bcryptjs
 const db = mysql.createConnection({
     host: 'localhost',    // MySQL server (local)
     user: 'root',         // Your MySQL username
-    password: '1234',  // Your MySQL password
-    database: 'students_db'  // Your database name
+    password: 'Test@1234!',  // Your MySQL password
+    database: 'student_db'  // Your database name
 });
 
 //Connect to MySQL
