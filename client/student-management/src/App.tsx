@@ -19,13 +19,12 @@ const AppContent = () => {
 
   useEffect(() => {
     const checkTokenExpiration = () => {
-      if (location.pathname === '/') return;
       const token = localStorage.getItem("token");
       const expiry = localStorage.getItem("token_expiry");
 
       const isTokenInvalid = !token || (expiry && Date.now() > parseInt(expiry));
 
-      if (isTokenInvalid) {
+      if (isTokenInvalid && location.pathname !== '/') {
         localStorage.removeItem("token");
         localStorage.removeItem("token_expiry");
         navigate("/", { replace: true });
@@ -33,10 +32,8 @@ const AppContent = () => {
       }
     };
 
-      // Only check if not on login page
-     if (location.pathname !== '/') {
-      checkTokenExpiration();
-     }
+     checkTokenExpiration();
+
 
     const interval = setInterval(checkTokenExpiration, 60 * 1000);
     return () => clearInterval(interval);

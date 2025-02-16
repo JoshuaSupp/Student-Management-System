@@ -29,14 +29,14 @@ db.connect((err) => {
 
 //API to add a student
 app.post('/api/add_student', (req, res) => {
-    const { first_name, email, gender, age } = req.body;
+    const { student_id,first_name, email, gender, age } = req.body;
 
-    if (!first_name || !email || !gender || !age) {
+    if (!student_id || !first_name || !email || !gender || !age) {
         return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const sql = 'INSERT INTO student_details (first_name, email, gender, age) VALUES (?, ?, ?, ?)';
-    db.query(sql, [first_name, email, gender, age], (err, result) => {
+    const sql = 'INSERT INTO student_details (student_id,first_name, email, gender, age) VALUES (?,?, ?, ?, ?)';
+    db.query(sql, [student_id,first_name, email, gender, age], (err, result) => {
         if (err) {
             console.error('❌ Error inserting user:', err);
             return res.status(500).json({ message: 'Database error' });

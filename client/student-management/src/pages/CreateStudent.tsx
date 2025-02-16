@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import {Link, useNavigate} from 'react-router-dom'
-
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const CreateStudent = () => {
   const [values, setValues] = useState({
@@ -21,11 +22,16 @@ useEffect(() => {
 
 function handleSubmit(e: { preventDefault: () => void }) {
   e.preventDefault();  // Prevent the default form submission
-  console.log('Form submitted with values:', values);
+  
 
+  console.log('Form submitted with values:', values);
+ 
   axios.post('/api/add_student', values)
       .then((res) => {
-          navigate('/home');
+          toast.success("Student Added Successful!", { position: "top-right", autoClose: 500 }); 
+          setTimeout(() => {
+            navigate("/home");
+          }, 900);
           console.log(res);
       })
       .catch((err) => console.log(err));
@@ -108,6 +114,7 @@ function handleSubmit(e: { preventDefault: () => void }) {
                 <button type="submit" className="btn btn-primary w-100">💾 Save</button>
             </div>
         </form>
+        <ToastContainer/>
     </div>
 </div>
   )

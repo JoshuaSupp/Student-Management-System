@@ -1,21 +1,32 @@
-// Updated PrivateRoute.jsx
-import { Navigate } from "react-router-dom";
+// components/PrivateRoute.jsx
+import { useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const PrivateRoute = ({ children }: { children: JSX.Element }) => {
-    const token = localStorage.getItem("token");
-    const expiry = localStorage.getItem("token_expiry");
-    
-    // Check if token exists and isn't expired
-    const isTokenValid = token && expiry && Date.now() < parseInt(expiry);
+  const token = localStorage.getItem("token");
+  const expiry = localStorage.getItem("token_expiry");
+  
+  // Check token validity
+  const isTokenValid = token && expiry && Date.now() < parseInt(expiry);
 
+  useEffect(() => {
     if (!isTokenValid) {
-        // Clear invalid token
-        localStorage.removeItem("token");
-        localStorage.removeItem("token_expiry");
-        return <Navigate to="/" replace />;
+      toast.error("Session expired! Please log in again.", {
+        position: "top-right",
+        autoClose: 800
+      });
     }
+  }, [isTokenValid]);
 
-    return children;
+  if (!isTokenValid) {
+    // Clear any residual tokens
+    localStorage.removeItem("token");
+    localStorage.removeItem("token_expiry");
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
 };
 
 export default PrivateRoute;

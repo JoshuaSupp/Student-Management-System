@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -9,6 +9,12 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
+    
+    useEffect(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("token_expiry");
+      }, []);
+
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
