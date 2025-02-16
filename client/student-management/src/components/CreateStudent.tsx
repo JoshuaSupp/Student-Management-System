@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import {Link, useNavigate} from 'react-router-dom'
+import { toast, ToastContainer } from 'react-toastify'
+import "react-toastify/dist/ReactToastify.css";
+
 
 
 const CreateStudent = () => {
@@ -24,10 +27,14 @@ function handleSubmit(e: { preventDefault: () => void }) {
 
   axios.post('/api/add_user', values)
       .then((res) => {
-          navigate('/');
+          toast.success('Student added', { position: "top-center", autoClose: 1000 });
+          navigate('/home');
           console.log(res);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        toast.error('Failed to add student', { position: "top-center", autoClose: 1000 });
+      });
 }
 
 

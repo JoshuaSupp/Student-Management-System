@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
+import { toast, ToastContainer } from 'react-toastify'
+import "react-toastify/dist/ReactToastify.css";
+
 
 function Read() {
   const [data, setData] = useState([]);
@@ -12,7 +15,10 @@ function Read() {
       .then((res) => {
         setData(res.data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        toast.error("Student not found", { position: "top-center", autoClose: 1000 });
+      });
       
   }, [id]);
   
@@ -21,7 +27,7 @@ function Read() {
     <div className="container-fluid vw-100 vh-100 bg-primary d-flex justify-content-center align-items-center">
     <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
     <h2 className="text-center mb-3">{id} </h2>
-    <Link to="/" className="btn btn-outline-primary mb-3">
+    <Link to="/home" className="btn btn-outline-primary mb-3">
       ← Back
     </Link>
 

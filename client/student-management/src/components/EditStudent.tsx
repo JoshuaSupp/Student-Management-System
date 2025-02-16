@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { toast, ToastContainer } from 'react-toastify'
+import "react-toastify/dist/ReactToastify.css";
+
 
 interface Student {
   id: number;
@@ -19,7 +22,10 @@ function Edit() {
       .then((res) => {
         setData(res.data);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        toast.error("Student not found", { position: "top-center", autoClose: 1000 });
+      });
   }, [id]);
 
   const navigate = useNavigate();
@@ -30,10 +36,14 @@ function Edit() {
     axios
       .post(`/api/edit_user/${id}`, data[0])
       .then((res) => {
-        navigate("/");
+        navigate("/home");
         console.log(res);
+        toast.success("Student updated successfully", { position: "top-center", autoClose: 1000 });
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        toast.error("Failed to update student", { position: "top-center", autoClose: 1000 });
+      });
   }
 
   return (

@@ -1,6 +1,9 @@
 import axios from 'axios';
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify'
+import "react-toastify/dist/ReactToastify.css";
+
 
 const Login = () => {
 
@@ -13,11 +16,13 @@ const Login = () => {
 
         axios.post("http://localhost:5000/login", { email, password })
             .then((res) => {
-                alert("Login Successful");
+                // alert("Login Successful");
+                toast.success("Login Successful!", { position: "top-center", autoClose: 1000 });
                 navigate("/home");
             })
             .catch((error) => {
-                alert(error.response?.data?.message || "Try Again");
+                // alert(error.response?.data?.message || "Try Again");
+                toast.error(error.response?.data?.message || "Try Again");
                 console.error(error);
             });
     };

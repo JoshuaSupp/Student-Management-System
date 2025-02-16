@@ -1,6 +1,8 @@
 import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { toast, ToastContainer } from 'react-toastify'
+import "react-toastify/dist/ReactToastify.css";
 
 interface Student {
   id: number;
@@ -20,7 +22,10 @@ function Home() {
         .then((res)=>{
             setData(res.data)
         })
-        .catch((err)=>console.log(err))
+        .catch((err) => {
+            console.log(err);
+            toast.error("Failed to fetch students");
+        });
     }
     }, [deleted])
 
@@ -28,8 +33,12 @@ function Home() {
         axios.delete(`/api/delete/${id}`)
         .then((res)=>{
             setDeleted(true)
+            toast.success("Student deleted successfully", { position: "top-center", autoClose: 1000 });
         })
-        .catch((err)=> console.log(err))
+        .catch((err) => {
+            console.log(err);
+            toast.error("Failed to delete student", { position: "top-center", autoClose: 1000 });
+        })
     }
   return (
     <div className="container py-5">
