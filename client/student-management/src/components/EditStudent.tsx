@@ -50,12 +50,24 @@ function Edit() {
     <div className="container-fluid vw-100 vh-100 bg-primary d-flex justify-content-center align-items-center">
     <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
       <h2 className="text-center mb-4">Edit User</h2>
-      <Link to="/" className="btn btn-outline-dark mb-3">
+      <Link to="/home" className="btn btn-outline-dark mb-3">
         ← Back
       </Link>
       
       {data.length > 0 && (
         <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label htmlFor="student_number" className="form-label">Student ID</label>
+            <input
+              value={data[0].student_number}
+              type="text"
+              name="student_number"
+              className="form-control"
+              disabled
+              onChange={(e) => setData([{ ...data[0], student_number: e.target.value }])}
+            />
+          </div>
+
           <div className="mb-3">
             <label htmlFor="name" className="form-label">Name</label>
             <input
@@ -108,7 +120,7 @@ function Edit() {
             <button type="submit" className="btn btn-success">
               Save
             </button>
-            <Link to="/" className="btn btn-secondary">
+            <Link to="/home" className="btn btn-secondary">
               Cancel
             </Link>
           </div>

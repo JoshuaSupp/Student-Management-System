@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 import "react-toastify/dist/ReactToastify.css";
+import Swal from 'sweetalert2';
 
 interface Student {
   id: number;
@@ -30,15 +31,36 @@ function Home() {
     }, [deleted])
 
     function handleDelete(id: any){
-        axios.delete(`/api/delete/${id}`)
-        .then((res)=>{
-            setDeleted(true)
-            toast.success("Student deleted successfully", { position: "top-center", autoClose: 1000 });
-        })
-        .catch((err) => {
-            console.log(err);
-            toast.error("Failed to delete student", { position: "top-center", autoClose: 1000 });
-        })
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You won\'t be able to revert this!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+          }).then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(`/api/delete/${id}`)
+                .then((res)=>{
+                    setDeleted(true)
+                    Swal.fire(
+                        'Deleted!',
+                        'Your file has been deleted.',
+                        'success'
+                    );
+                })
+                .catch((err) => {
+                    console.log(err);
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Could not delete student',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                      });
+                });
+            }
+          });
     }
   return (
     <div className="container py-5">
@@ -56,7 +78,7 @@ function Home() {
                     <table className="table table-striped table-hover">
                         <thead className="table-dark">
                             <tr>
-                                <th>ID</th>
+                                <th>Student ID</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Age</th>
@@ -67,7 +89,7 @@ function Home() {
                         <tbody>
                             {data.map((student) => (
                                 <tr key={student.id}>
-                                    <td>{student.id}</td>
+                                    <td>{student.student_number}</td>
                                     <td>{student.first_name}</td>
                                     <td>{student.email}</td>
                                     <td>{student.age}</td>

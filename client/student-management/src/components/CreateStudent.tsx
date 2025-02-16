@@ -48,6 +48,18 @@ function handleSubmit(e: { preventDefault: () => void }) {
         </div>
         
         <form onSubmit={handleSubmit}>
+        <div className="form-group my-3">
+                <label htmlFor="student_number" className="fw-bold">Student ID</label>
+                <input 
+                    type="text" 
+                    name="student_number" 
+                    className="form-control" 
+                    placeholder="Enter student ID" 
+                    required 
+                    onChange={(e) => setValues({ ...values, student_number: e.target.value })} 
+                />
+            </div>
+
             <div className="form-group my-3">
                 <label htmlFor="first_name" className="fw-bold">First Name</label>
                 <input 
