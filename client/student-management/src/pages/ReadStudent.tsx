@@ -24,7 +24,7 @@ function Read() {
       <div className="container-fluid vw-100 vh-100 bg-light d-flex justify-content-center align-items-center">
       <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
       <h2 className="text-center mb-3">{id} </h2>
-      <Link to="/home" className="btn btn-outline-primary mb-3">
+      <Link to="/students" className="btn btn-outline-primary mb-3">
         ← Back
       </Link>
 

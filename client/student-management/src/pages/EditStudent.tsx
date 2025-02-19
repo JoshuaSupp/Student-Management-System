@@ -33,7 +33,7 @@ function Edit() {
     axios
       .post(`/api/edit_user/${id}`, data[0])
       .then((res) => {
-        navigate("/home");
+        navigate("/students");
         console.log(res);
       })
       .catch((err) => console.log(err));
@@ -45,7 +45,7 @@ function Edit() {
     <div className="container-fluid vw-100 vh-100 bg-primary d-flex justify-content-center align-items-center">
     <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
       <h2 className="text-center mb-4">Edit User</h2>
-      <Link to="/home" className="btn btn-outline-dark mb-3">
+      <Link to="/students" className="btn btn-outline-dark mb-3">
         ← Back
       </Link>
       
@@ -116,7 +116,7 @@ function Edit() {
             <button type="submit" className="btn btn-success">
               Save
             </button>
-            <Link to="/home" className="btn btn-secondary">
+            <Link to="/students" className="btn btn-secondary">
               Cancel
             </Link>
           </div>

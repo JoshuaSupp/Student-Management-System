@@ -29,7 +29,7 @@ const Login = () => {
 
                 // Delay navigation to allow toast to be visible
                 setTimeout(() => {
-                  navigate("/home");
+                  navigate("/dashboard");
                 }, 900);
             })
             .catch((error) => {

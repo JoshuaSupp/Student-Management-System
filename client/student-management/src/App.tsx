@@ -11,6 +11,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminCourses from './pages/AdminCourse';
 import CreateCourse from './pages/CreateCourse';
+import AdminDashboard from './pages/AdminDashboard';
 
 // Create a wrapper component to handle navigation
 const AppContent = () => {
@@ -42,7 +43,8 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path='/' element={<Login/>} />
-      <Route path='/home' element={
+      <Route path='/dashboard' element={<AdminDashboard/>} />
+      <Route path='/students' element={
         <PrivateRoute>
           <HomeStudent /> 
         </PrivateRoute>

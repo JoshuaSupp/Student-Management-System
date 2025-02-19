@@ -4,14 +4,22 @@ import {Link, useNavigate} from 'react-router-dom'
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+interface Course {
+    course_id: number; 
+    course_name: string;
+}
+
 const CreateStudent = () => {
   const [values, setValues] = useState({
     student_id: '',
     first_name: '',
     email: '',
     age: '',
-    gender: ''
+    gender: '',
+    studentcourse_id: ''
 })
+const [courses, setCourses] = useState<Course[]>([]);
+const [selectedCourseId, setSelectedCourseId] = useState('');
 
 const navigate = useNavigate()
 
@@ -19,23 +27,53 @@ useEffect(() => {
   console.log(values);  // This will log the state whenever it changes
 }, [values]);
 
+useEffect(() => {
+    console.log("Selected Course ID:", selectedCourseId); // Log selected course ID
 
-function handleSubmit(e: { preventDefault: () => void }) {
-  e.preventDefault();  // Prevent the default form submission
-  
+  }, [selectedCourseId]);
 
-  console.log('Form submitted with values:', values);
- 
-  axios.post('/api/add_student', values)
-      .then((res) => {
-          toast.success("Student Added Successful!", { position: "top-right", autoClose: 500 }); 
-          setTimeout(() => {
-            navigate("/home");
-          }, 900);
-          console.log(res);
-      })
-      .catch((err) => console.log(err));
-}
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get('/api/admin_courses'); // Adjust your API endpoint
+        setCourses(response.data);
+        console.log("Admin Courses",response.data)
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+
+const handleCourseChange = (e: { target: { value: any; }; }) => {
+    const courseId = e.target.value;
+    setSelectedCourseId(courseId); // Update the dedicated state for course ID
+
+    setValues({
+        ...values,
+        studentcourse_id: courseId, // Make sure the existing "values" state knows about it too
+    });
+};
+
+const handleSubmit = async (e: { preventDefault: () => void; }) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post('/api/add_student', {
+        ...values,  // All the existing values
+        studentcourse_id: selectedCourseId, // Explicitly override with selectedCourseId in case of issues
+      });
+
+      console.log('Student added successfully:', response.data);
+      navigate('/students'); // Or wherever you want to navigate
+
+    } catch (error) {
+      console.error('Error adding student:', error);
+      // Handle error - display a message to the user, etc.
+    }
+  };
 
 
   return (
@@ -44,7 +82,7 @@ function handleSubmit(e: { preventDefault: () => void }) {
         <h3 className="text-center text-primary mb-4">Add Student</h3>
         
         <div className="d-flex justify-content-end">
-            <Link to="/home" className="btn btn-outline-success btn-sm">🏠 Students</Link>
+            <Link to="/students" className="btn btn-outline-success btn-sm">🏠 Students</Link>
         </div>
         
         <form onSubmit={handleSubmit}>
@@ -109,6 +147,24 @@ function handleSubmit(e: { preventDefault: () => void }) {
                     onChange={(e) => setValues({ ...values, age: e.target.value })} 
                 />
             </div>
+
+            <div className="form-group my-3">
+        <label htmlFor="studentcourse_id" className="fw-bold">Course Name</label>
+        <select
+          name="studentcourse_id"
+          className="form-control"
+          required
+          value={selectedCourseId}
+          onChange={handleCourseChange}
+        >
+          <option value="" disabled>Select a Course</option>
+          {courses.map((course) => (
+            <option key={course.course_id} value={course.course_id}>
+              {course.course_name}
+            </option>
+          ))}
+        </select>
+      </div>
 
             <div className="form-group text-center mt-4">
                 <button type="submit" className="btn btn-primary w-100">💾 Save</button>

@@ -13,10 +13,10 @@ const AdminNavbar = () => {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
           <li className="nav-item">
-              <Link className="nav-link" to="/home">Home</Link>
+              <Link className="nav-link" to="/dashboard">Dashboard</Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/home">Students</Link>
+              <Link className="nav-link" to="/students">Students</Link>
             </li>
             <li className="nav-item">
               <Link className="nav-link" to="/admin_course">Courses</Link>

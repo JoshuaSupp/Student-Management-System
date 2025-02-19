@@ -22,7 +22,7 @@ const CreateCourse = () => {
   
     axios.post('/api/admin_courses', values)
         .then((res) => {
-            navigate('/home');
+            navigate('/students');
             console.log(res);
         })
         .catch((err) => console.log(err));

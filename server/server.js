@@ -28,22 +28,87 @@ db.connect((err) => {
 });
 
 //API to add a student
+// app.post('/api/add_student', (req, res) => {
+//     const { student_id,first_name, email, gender, age } = req.body;
+
+//     if (!student_id || !first_name || !email || !gender || !age) {
+//         return res.status(400).json({ message: 'All fields are required' });
+//     }
+
+//     const sql = 'INSERT INTO student_details (student_id,first_name, email, gender, age) VALUES (?,?, ?, ?, ?)';
+//     db.query(sql, [student_id,first_name, email, gender, age], (err, result) => {
+//         if (err) {
+//             console.error('❌ Error inserting user:', err);
+//             return res.status(500).json({ message: 'Database error' });
+//         }
+//         res.status(201).json({ message: 'User added successfully!', userId: result.insertId });
+//     });
+// });
+
 app.post('/api/add_student', (req, res) => {
-    const { student_id,first_name, email, gender, age } = req.body;
+  const { student_id, first_name, email, gender, age, studentcourse_id } = req.body;
 
-    if (!student_id || !first_name || !email || !gender || !age) {
-        return res.status(400).json({ message: 'All fields are required' });
-    }
+  // Validate input
+  if (!student_id || !first_name || !email || !gender || !age || !studentcourse_id) {
+      return res.status(400).json({ message: 'All fields are required' });
+  }
 
-    const sql = 'INSERT INTO student_details (student_id,first_name, email, gender, age) VALUES (?,?, ?, ?, ?)';
-    db.query(sql, [student_id,first_name, email, gender, age], (err, result) => {
-        if (err) {
-            console.error('❌ Error inserting user:', err);
-            return res.status(500).json({ message: 'Database error' });
-        }
-        res.status(201).json({ message: 'User added successfully!', userId: result.insertId });
-    });
+  // Start a transaction
+  db.beginTransaction((err) => {
+      if (err) {
+          console.error('❌ Error starting transaction:', err);
+          return res.status(500).json({ message: 'Database error' });
+      }
+
+      // Step 1: Insert the student into student_details
+      const insertStudentSql = `
+          INSERT INTO students_db.student_details 
+          (student_id, first_name, email, gender, age, studentcourse_id) 
+          VALUES (?, ?, ?, ?, ?, ?)
+      `;
+      db.query(insertStudentSql, [student_id, first_name, email, gender, age, studentcourse_id], (err, result) => {
+          if (err) {
+              console.error('❌ Error inserting student:', err);
+              return db.rollback(() => {
+                  res.status(500).json({ message: 'Database error while inserting student' });
+              });
+          }
+
+          // Step 2: Update the student count in student_courses
+          const updateCourseSql = `
+              UPDATE students_db.student_courses
+              SET student_count = student_count + 1
+              WHERE course_id = ? AND EXISTS (
+                  SELECT 1 
+                  FROM students_db.student_details 
+                  WHERE student_id = ? AND studentcourse_id = ?
+              )
+          `;
+          db.query(updateCourseSql, [studentcourse_id, student_id, studentcourse_id], (err, result) => {
+              if (err) {
+                  console.error('❌ Error updating course count:', err);
+                  return db.rollback(() => {
+                      res.status(500).json({ message: 'Database error while updating course count' });
+                  });
+              }
+
+              // Commit the transaction
+              db.commit((err) => {
+                  if (err) {
+                      console.error('❌ Error committing transaction:', err);
+                      return db.rollback(() => {
+                          res.status(500).json({ message: 'Database error while committing transaction' });
+                      });
+                  }
+
+                  // Success response
+                  res.status(201).json({ message: 'Student added successfully!' });
+              });
+          });
+      });
+  });
 });
+
 
 //API to add a course
 app.post('/api/add_course', (req, res) => {
