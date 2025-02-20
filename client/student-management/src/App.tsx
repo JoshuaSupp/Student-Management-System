@@ -1,11 +1,11 @@
 import React from 'react'
 import { BrowserRouter,Routes,Route } from 'react-router-dom'
 import 'bootstrap/dist/css/bootstrap.min.css'
-import HomeStudent from './components/HomeStudent'
-import CreateStudent from './components/CreateStudent'
-import EditStudent from './components/EditStudent'
-import ReadStudent from './components/ReadStudent'
-import Login from './components/Login'
+import HomeStudent from './pages/HomeStudent'
+import CreateStudent from './pages/CreateStudent'
+import EditStudent from './pages/EditStudent'
+import ReadStudent from './pages/ReadStudent'
+import Login from './pages/Login'
 
 const App = () => {
   return (
