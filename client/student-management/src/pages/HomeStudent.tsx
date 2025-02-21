@@ -13,11 +13,20 @@ interface Student {
   email: string;
   age: number;
   gender: string;
+  studentcourse_id: number;
+}
+
+interface Course {
+    course_id: number; 
+    course_name: string;
 }
 
 function Home() {
     const [data, setData] = useState<Student[]>([]);
     const [deleted, setDeleted] = useState(true)
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [selectedCourseId, setSelectedCourseId] = useState('');
+
     useEffect(()=>{
         if(deleted){
             setDeleted(false)
@@ -26,9 +35,15 @@ function Home() {
             setData(res.data)
         })
         .catch((err)=>console.log(err))
+
+        axios.get('/api/admin_courses') 
+        .then((res) => {
+            setCourses(res.data); 
+        })
+        .catch((err) => console.log(err));
     }
     }, [deleted])
-
+    
     function handleDelete(id: any){
         axios.delete(`/api/delete/${id}`)
         .then((res)=>{
@@ -36,6 +51,12 @@ function Home() {
         })
         .catch((err)=> console.log(err))
     }
+
+       // Create a mapping of course IDs to course names
+    const courseMap = new Map<number, string>();
+    courses.forEach(course => {
+        return courseMap.set(course.course_id, course.course_name);
+    });
   return (
     <div>
         <AdminNavbar/>
@@ -60,6 +81,7 @@ function Home() {
                                     <th>Email</th>
                                     <th>Age</th>
                                     <th>Gender</th>
+                                    <th>Course</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -72,6 +94,7 @@ function Home() {
                                         <td>{student.email}</td>
                                         <td>{student.age}</td>
                                         <td>{student.gender}</td>
+                                        <td>{courseMap.get(student.studentcourse_id) || 'N/A'}</td> 
                                         <td>
                                             <Link className="btn btn-info btn-sm me-2" to={`/read/${student.id}`}>
                                                 View

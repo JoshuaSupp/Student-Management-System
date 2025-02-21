@@ -109,7 +109,6 @@ app.post('/api/add_student', (req, res) => {
   });
 });
 
-
 //API to add a course
 app.post('/api/add_course', (req, res) => {
   const { course_id, course_name } = req.body;
@@ -155,6 +154,30 @@ app.get("/api/admin_courses", (req, res) => {
     return res.json(result);
   });
 });
+
+//API to get student count from each course
+app.get("/api/student_counts", (req, res) => {
+  const sql = `
+      SELECT 
+          c.course_name,
+          COUNT(sd.student_id) AS student_count
+      FROM 
+          student_courses c
+      LEFT JOIN 
+          student_details sd ON sd.studentcourse_id = c.course_id
+      GROUP BY 
+          c.course_name;
+  `;
+  
+  db.query(sql, (err, result) => {
+      if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ message: "Server error" });
+      }
+      return res.json(result);
+  });
+});
+
 
 //API to edit student
 app.post("/api/edit_user/:id", (req, res) => {

@@ -1,6 +1,7 @@
 import React from 'react'
 import AdminNavbar from '../components/AdminNavbar'
-import PieChart from '../components/PieChart'
+import PieChart from '../components/AdminDashboardPieChart'
+import BarChart from '../components/AdminDashboardBarChart'
 
 const AdminDashboard: React.FC = () => {
   return (
@@ -8,6 +9,9 @@ const AdminDashboard: React.FC = () => {
       <AdminNavbar/>
       <div>
       <PieChart/>
+      </div>
+      <div>
+        <BarChart/>
       </div>
     </div>
   )
