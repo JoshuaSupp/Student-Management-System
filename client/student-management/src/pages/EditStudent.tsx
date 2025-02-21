@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import AdminNavbar from "../components/AdminNavbar";
 
 interface Student {
+  student_id: string,
   id: number;
   first_name: string;
   email: string;
@@ -18,6 +20,7 @@ function Edit() {
       .get(`/api/get_student/${id}`)
       .then((res) => {
         setData(res.data);
+        console.log("Students Data",res.data)
       })
       .catch((err) => console.log(err));
   }, [id]);
@@ -30,28 +33,43 @@ function Edit() {
     axios
       .post(`/api/edit_user/${id}`, data[0])
       .then((res) => {
-        navigate("/");
+        navigate("/students");
         console.log(res);
       })
       .catch((err) => console.log(err));
   }
 
   return (
+    <div>
+      <AdminNavbar/>
     <div className="container-fluid vw-100 vh-100 bg-primary d-flex justify-content-center align-items-center">
     <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
       <h2 className="text-center mb-4">Edit User</h2>
-      <Link to="/" className="btn btn-outline-dark mb-3">
+      <Link to="/students" className="btn btn-outline-dark mb-3">
         ← Back
       </Link>
       
       {data.length > 0 && (
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
-            <label htmlFor="name" className="form-label">Name</label>
+            <label htmlFor="student_id" className="form-label">Student ID</label>
+            <input
+              value={data[0].student_id}
+              type="text"
+              name="student_id"
+              className="form-control"
+              required
+              onChange={(e) => setData([{ ...data[0], student_id: e.target.value }])}
+              readOnly
+              style={{ cursor: "not-allowed" }}
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="first_name" className="form-label">First Name</label>
             <input
               value={data[0].first_name}
               type="text"
-              name="name"
+              name="first_name"
               className="form-control"
               required
               onChange={(e) => setData([{ ...data[0], first_name: e.target.value }])}
@@ -98,15 +116,15 @@ function Edit() {
             <button type="submit" className="btn btn-success">
               Save
             </button>
-            <Link to="/" className="btn btn-secondary">
+            <Link to="/students" className="btn btn-secondary">
               Cancel
             </Link>
           </div>
         </form>
       )}
     </div>
+    </div>
   </div>
-  
   );
 }
 
