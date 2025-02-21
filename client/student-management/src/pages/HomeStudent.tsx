@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 import "react-toastify/dist/ReactToastify.css";
 import Swal from 'sweetalert2';
+import Navbar from '../components/Navbar';
 
 interface Student {
   id: number;
@@ -63,6 +64,8 @@ function Home() {
           });
     }
   return (
+    <>
+    <Navbar />
     <div className="container py-5">
             <div className="card shadow-lg p-4">
                 <h3 className="text-center text-primary mb-4">Students List</h3>
@@ -115,6 +118,7 @@ function Home() {
                 </div>
             </div>
         </div>
+        </>
   )
 }
 
