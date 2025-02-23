@@ -26,72 +26,140 @@ db.connect((err) => {
 });
 
 //API to add a user
-app.post('/add_user', (req, res) => {
-    const { student_number, first_name, email, gender, age } = req.body;
+app.post('/students/add', (req, res) => {
+  const { student_number, first_name, email, gender, age } = req.body;
 
-    if (!student_number || !first_name || !email || !gender || !age) {
-        return res.status(400).json({ message: 'All fields are required' });
-    }
+  if (!student_number || !first_name || !email || !gender || !age) {
+      return res.status(400).json({ message: 'All fields are required' });
+  }
 
-    const sql = 'INSERT INTO student_details (student_number, first_name, email, gender, age) VALUES (?, ?, ?, ?, ?)';
-    db.query(sql, [student_number, first_name, email, gender, age], (err, result) => {
-        if (err) {
-            console.error('❌ Error inserting user:', err);
-            return res.status(500).json({ message: 'Database error' });
-        }
-        res.status(201).json({ message: 'User added successfully!', userId: result.insertId });
-    });
+  const sql = 'INSERT INTO student_details (student_number, first_name, email, gender, age) VALUES (?, ?, ?, ?, ?)';
+  db.query(sql, [student_number, first_name, email, gender, age], (err, result) => {
+      if (err) {
+          console.error('❌ Error inserting user:', err);
+          return res.status(500).json({ message: 'Database error' });
+      }
+      res.status(201).json({ message: 'User added successfully!', userId: result.insertId });
+  });
 });
 
 //API to get all students
 app.get("/students", (req, res) => {
-    const sql = "SELECT * FROM student_details";
-    db.query(sql, (err, result) => {
-      if (err) res.json({ message: "Server error" });
-      return res.json(result);
-    });
+  const sql = "SELECT * FROM student_details";
+  db.query(sql, (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
   });
- 
+});
+
 //API to get specific student
-app.get("/get_student/:id", (req, res) => {
-    const id = req.params.id;
-    const sql = "SELECT * FROM student_details WHERE `id`= ?";
-    db.query(sql, [id], (err, result) => {
-      if (err) res.json({ message: "Server error" });
-      return res.json(result);
-    });
+app.get("/students/get/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM student_details WHERE `id`= ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
   });
+});
 
 //API to edit student
-app.post("/edit_user/:id", (req, res) => {
-    const id = req.params.id;
-    const sql =
-      "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=? WHERE id=?";
-    const values = [
-      req.body.name,
-      req.body.email,
-      req.body.age,
-      req.body.gender,
-      id,
-    ];
-    db.query(sql, values, (err, result) => {
-      if (err)
-        return res.json({ message: "Something unexpected has occured" + err });
-      return res.json({ success: "Student updated successfully" });
-    });
+app.post("/students/edit/:id", (req, res) => {
+  const id = req.params.id;
+  const sql =
+    "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=? WHERE id=?";
+  const values = [
+    req.body.name,
+    req.body.email,
+    req.body.age,
+    req.body.gender,
+    id,
+  ];
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Student updated successfully" });
   });
+});
 
 //API to delete student
-app.delete("/delete/:id", (req, res) => {
-    const id = req.params.id;
-    const sql = "DELETE FROM student_details WHERE id=?";
-    const values = [id];
-    db.query(sql, values, (err, result) => {
-      if (err)
-        return res.json({ message: "Something unexpected has occured" + err });
-      return res.json({ success: "Student updated successfully" });
-    });
+app.delete("/students/delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM student_details WHERE id=?";
+  const values = [id];
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Student updated successfully" });
   });
+});
+
+//! Courses
+
+//API to add a course
+app.post('/courses/add', (req, res) => {
+  const { course_number, name, student_count } = req.body;
+
+  if (!course_number || !name || !student_count) {
+      return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  const sql = 'INSERT INTO course_details (course_number, name, student_count) VALUES (?, ?, ?)';
+  db.query(sql, [course_number, name, student_count], (err, result) => {
+      if (err) {
+          console.error('❌ Error inserting course:', err);
+          return res.status(500).json({ message: 'Database error' });
+      }
+      res.status(201).json({ message: 'Course added successfully!', userId: result.insertId });
+  });
+});
+
+//API to get all courses
+app.get("/courses", (req, res) => {
+  const sql = "SELECT * FROM course_details";
+  db.query(sql, (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
+  });
+});
+
+//API to get specific course
+app.get("/courses/get/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM course_details WHERE `id`= ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
+  });
+});
+
+//API to edit course
+app.post("/courses/edit/:id", (req, res) => {
+  const id = req.params.id;
+  const sql =
+    "UPDATE course_details SET `name`=?, `student_count`=? WHERE id=?";
+  const values = [
+    req.body.name,
+    req.body.student_count,
+    id,
+  ];
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Course updated successfully" });
+  });
+});
+
+//API to delete course
+app.delete("/courses/delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM course_details WHERE id=?";
+  const values = [id];
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Course updated successfully" });
+  });
+});
 
 // API for admin login (NO SESSION)
 app.post("/login", (req, res) => {

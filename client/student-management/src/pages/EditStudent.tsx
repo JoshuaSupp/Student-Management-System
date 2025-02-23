@@ -7,18 +7,19 @@ import "react-toastify/dist/ReactToastify.css";
 
 interface Student {
   id: number;
+  student_number: string;
   first_name: string;
   email: string;
   age: number;
   gender: string;
 }
 
-function Edit() {
+function EditStudent() {
   const [data, setData] = useState<Student[]>([]);
   const { id } = useParams();
   useEffect(() => {
     axios
-      .get(`/api/get_student/${id}`)
+      .get(`/api/students/get/${id}`)
       .then((res) => {
         setData(res.data);
       })
@@ -34,7 +35,7 @@ function Edit() {
     e.preventDefault();
 
     axios
-      .post(`/api/edit_user/${id}`, data[0])
+      .post(`/api/students/edit/${id}`, data[0])
       .then((res) => {
         navigate("/home");
         console.log(res);
@@ -132,4 +133,4 @@ function Edit() {
   );
 }
 
-export default Edit;
+export default EditStudent;

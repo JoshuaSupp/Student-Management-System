@@ -1,15 +1,17 @@
 import "../css/Navbar.css";
 function Navbar() {
     return (
-        <div id="Links">
-            <ul>
-                <li><a href="#">HOME</a></li>
-                <li><a href="#">ABOUT</a></li>
-                <li><a href="#">COURSE</a></li>
-                <li><a href="#">BLOG</a></li>
-                <li><a href="#">CONTACT</a></li>
-            </ul>
-        </div>
+        <nav>
+            <h2>Admin Portal</h2>
+            <div id="Links">
+                <ul>
+                    <li><a href="#dash">Dashboard</a></li>
+                    <li><a href="/home">Students</a></li>
+                    <li><a href="/courses">Courses</a></li>
+                    <li><a href="/">Log Out</a></li>
+                </ul>
+            </div>
+        </nav>
     )
 }
 export default Navbar;

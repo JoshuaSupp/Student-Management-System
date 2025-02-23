@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const CreateStudent = () => {
   const [values, setValues] = useState({
+    student_number: '',
     first_name: '',
     email: '',
     age: '',
@@ -25,7 +26,7 @@ function handleSubmit(e: { preventDefault: () => void }) {
   e.preventDefault();  // Prevent the default form submission
   console.log('Form submitted with values:', values);
 
-  axios.post('/api/add_user', values)
+  axios.post('/api/students/add', values)
       .then((res) => {
           toast.success('Student added', { position: "top-center", autoClose: 1000 });
           navigate('/home');
@@ -54,7 +55,7 @@ function handleSubmit(e: { preventDefault: () => void }) {
                     type="text" 
                     name="student_number" 
                     className="form-control" 
-                    placeholder="Enter student ID" 
+                    placeholder="Enter student Number" 
                     required 
                     onChange={(e) => setValues({ ...values, student_number: e.target.value })} 
                 />

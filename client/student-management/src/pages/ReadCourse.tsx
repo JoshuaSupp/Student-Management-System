@@ -5,19 +5,19 @@ import { toast, ToastContainer } from 'react-toastify'
 import "react-toastify/dist/ReactToastify.css";
 
 
-function ReadStudent() {
+function ReadCourse() {
   const [data, setData] = useState([]);
   const { id } = useParams();
  
   useEffect(() => {
     axios
-      .get(`/api/students/get/${id}`)
+      .get(`/api/courses/get/${id}`)
       .then((res) => {
         setData(res.data);
       })
       .catch((err) => {
         console.log(err);
-        toast.error("Student not found", { position: "top-center", autoClose: 1000 });
+        toast.error("Course not found", { position: "top-center", autoClose: 1000 });
       });
       
   }, [id]);
@@ -26,18 +26,16 @@ function ReadStudent() {
   return (
     <div className="container-fluid vw-100 vh-100 bg-primary d-flex justify-content-center align-items-center">
     <div className="card p-4 shadow-lg" style={{ width: "400px" }}>
-    <h2 className="text-center mb-3">Student Details</h2>
-    <Link to="/home" className="btn btn-outline-primary mb-3">
+    <h2 className="text-center mb-3">Course Details</h2>
+    <Link to="/courses" className="btn btn-outline-primary mb-3">
       ← Back
     </Link>
 
-    {data.map((student) => (
+    {data.map((course) => (
       <ul className="list-group">
-        <li className="list-group-item"><b>Student Number:</b> {student["student_number"]}</li>
-        <li className="list-group-item"><b>Name:</b> {student["first_name"]}</li>
-        <li className="list-group-item"><b>Email:</b> {student["email"]}</li>
-        <li className="list-group-item"><b>Age:</b> {student["age"]}</li>
-        <li className="list-group-item"><b>Gender:</b> {student["gender"]}</li>
+        <li className="list-group-item"><b>ID:</b> {course["course_number"]}</li>
+        <li className="list-group-item"><b>Name:</b> {course["name"]}</li>
+        <li className="list-group-item"><b>Student Count:</b> {course["student_count"]}</li>
       </ul>
     ))}
   </div>
@@ -46,4 +44,4 @@ function ReadStudent() {
   );
 }
 
-export default ReadStudent;
+export default ReadCourse;
