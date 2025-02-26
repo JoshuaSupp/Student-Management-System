@@ -146,6 +146,17 @@ app.get("/api/get_student/:id", (req, res) => {
     });
   });
 
+  //API to get specific course
+app.get("/api/get_course/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM student_courses WHERE `id`= ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
+  });
+});
+
+
 //API to get all courses
 app.get("/api/admin_courses", (req, res) => {
   const sql = "SELECT * FROM student_courses";
@@ -183,12 +194,13 @@ app.get("/api/student_counts", (req, res) => {
 app.post("/api/edit_user/:id", (req, res) => {
     const id = req.params.id;
     const sql =
-      "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=? WHERE id=?";
+      "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=?, `studentcourse_id`=? WHERE id=?";
     const values = [
       req.body.first_name,
       req.body.email,
       req.body.age, 
       req.body.gender,
+      req.body.studentcourse_id,
       id,
     ];
     db.query(sql, values, (err, result) => {
@@ -197,6 +209,24 @@ app.post("/api/edit_user/:id", (req, res) => {
       return res.json({ success: "Student updated successfully" });
     });
   });
+
+//API to edit student
+app.post("/api/edit_course/:id", (req, res) => {
+  const id = req.params.id;
+  const sql =
+    "UPDATE student_courses SET `course_name`=? WHERE id=?";
+  const values = [
+    req.body.course_name,
+    id,
+  ];
+ // console.log('Course Name',req.body.course_name);
+ // console.log('Student Count',req.body.student_count);
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Course updated successfully" });
+  });
+});
 
 //API to delete student
 app.delete("/api/delete/:id", (req, res) => {
@@ -209,6 +239,18 @@ app.delete("/api/delete/:id", (req, res) => {
       return res.json({ success: "Student updated successfully" });
     });
   });
+
+//API to delete student
+app.delete("/api/course_delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM student_courses WHERE id=?";
+  const values = [id];
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Course updated successfully" });
+  });
+});
 
 //login with session
 const secretKey = process.env.JWT_SECRET_KEY;

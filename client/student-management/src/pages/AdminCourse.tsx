@@ -27,7 +27,7 @@ const Courses = () => {
     }, [deleted])
 
     function handleDelete(id: any){
-        axios.delete(`/api/delete/${id}`)
+        axios.delete(`/api/course_delete/${id}`)
         .then((res)=>{
             setDeleted(true)
         })
@@ -63,7 +63,7 @@ const Courses = () => {
                                         <td>{course.course_id}</td>
                                         <td>{course.course_name}</td>
                                         <td>
-                                            <Link className="btn btn-warning btn-sm me-2" to={`/edit/${course.id}`}>
+                                            <Link className="btn btn-warning btn-sm me-2" to={`/edit/course/${course.id}`}>
                                                 Edit
                                             </Link>
                                             <button 

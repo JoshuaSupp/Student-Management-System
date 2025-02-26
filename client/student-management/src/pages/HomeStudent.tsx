@@ -99,7 +99,7 @@ function Home() {
                                             <Link className="btn btn-info btn-sm me-2" to={`/read/${student.id}`}>
                                                 View
                                             </Link>
-                                            <Link className="btn btn-warning btn-sm me-2" to={`/edit/${student.id}`}>
+                                            <Link className="btn btn-warning btn-sm me-2" to={`/edit/student/${student.id}`}>
                                                 Edit
                                             </Link>
                                             <button 

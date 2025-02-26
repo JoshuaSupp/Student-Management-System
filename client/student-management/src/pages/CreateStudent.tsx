@@ -35,7 +35,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const response = await axios.get('/api/admin_courses'); // Adjust your API endpoint
+        const response = await axios.get('/api/admin_courses'); 
         setCourses(response.data);
         console.log("Admin Courses",response.data)
       } catch (error) {
@@ -164,7 +164,7 @@ const handleSubmit = async (e: { preventDefault: () => void; }) => {
             </option>
           ))}
         </select>
-      </div>
+            </div>
 
             <div className="form-group text-center mt-4">
                 <button type="submit" className="btn btn-primary w-100">💾 Save</button>

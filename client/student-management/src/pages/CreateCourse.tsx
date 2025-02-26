@@ -20,9 +20,9 @@ const CreateCourse = () => {
     e.preventDefault();  // Prevent the default form submission
     console.log('Form submitted with values:', values);
   
-    axios.post('/api/admin_courses', values)
+    axios.post('/api/add_course', values)
         .then((res) => {
-            navigate('/students');
+            navigate('/admin_course');
             console.log(res);
         })
         .catch((err) => console.log(err));

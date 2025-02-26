@@ -12,6 +12,7 @@ import "react-toastify/dist/ReactToastify.css";
 import AdminCourses from './pages/AdminCourse';
 import CreateCourse from './pages/CreateCourse';
 import AdminDashboard from './pages/AdminDashboard';
+import EditCourse from './pages/EditCourse';
 
 // Create a wrapper component to handle navigation
 const AppContent = () => {
@@ -54,7 +55,7 @@ const AppContent = () => {
           <CreateStudent />
         </PrivateRoute>
       }/>  {/* admin */}
-      <Route path='/edit/:id' element={
+      <Route path='/edit/student/:id' element={
         <PrivateRoute>
           <EditStudent />
         </PrivateRoute>
@@ -72,6 +73,11 @@ const AppContent = () => {
       <Route path='/create_course' element={
         <PrivateRoute>
           <CreateCourse/>
+        </PrivateRoute>
+      }/>
+      <Route path='/edit/course/:id' element={
+        <PrivateRoute>
+          <EditCourse/>
         </PrivateRoute>
       }/>
     </Routes>
