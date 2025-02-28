@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import {Link, useNavigate} from 'react-router-dom'
-import AdminNavbar from '../components/AdminNavbar'
+import AdminNavbar from '../../components/AdminNavbar'
 
 const CreateCourse = () => {
     const [values, setValues] = useState({

@@ -1,73 +1,49 @@
-import axios from 'axios'
 import React, { useEffect, useState } from 'react'
+import AdminNavbar from '../../components/AdminNavbar';
 import { Link } from 'react-router-dom'
+import axios from 'axios'
 import Swal from 'sweetalert2';
-import AdminNavbar from '../components/AdminNavbar';
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
-interface Student {
-  id: number;
-  student_id: string;
-  first_name: string;
-  email: string;
-  age: number;
-  gender: string;
-  studentcourse_id: number;
+interface Courses{
+    id: '',
+    course_id: '',
+    course_name: '',
 }
 
-interface Course {
-    course_id: number; 
-    course_name: string;
-}
-
-function Home() {
-    const [data, setData] = useState<Student[]>([]);
+const Courses = () => {
+    const [data, setData] = useState<Courses[]>([]);
     const [deleted, setDeleted] = useState(true)
-    const [courses, setCourses] = useState<Course[]>([]);
-    const [selectedCourseId, setSelectedCourseId] = useState('');
 
     useEffect(()=>{
         if(deleted){
             setDeleted(false)
-        axios.get('/api/students')
+        axios.get('/api/admin_courses')
         .then((res)=>{
             setData(res.data)
+            console.log("Courses",res.data)
         })
         .catch((err)=>console.log(err))
-
-        axios.get('/api/admin_courses') 
-        .then((res) => {
-            setCourses(res.data); 
-        })
-        .catch((err) => console.log(err));
     }
     }, [deleted])
-    
+
     function handleDelete(id: any){
-        axios.delete(`/api/delete/${id}`)
+        axios.delete(`/api/course_delete/${id}`)
         .then((res)=>{
             setDeleted(true)
         })
         .catch((err)=> console.log(err))
     }
-
-       // Create a mapping of course IDs to course names
-    const courseMap = new Map<number, string>();
-    courses.forEach(course => {
-        return courseMap.set(course.course_id, course.course_name);
-    });
   return (
     <div>
-        <AdminNavbar/>
-        <div className="container py-5">
+    <AdminNavbar/>
+    <div className="container py-5">
                 <div className="card shadow-lg p-4">
-                    <h3 className="text-center text-primary mb-4">Students List</h3>
+                    <h3 className="text-center text-primary mb-4">Courses Available</h3>
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <Link to="/" className="btn btn-outline-success btn-sm">🏠 Log Out</Link>
-                        <Link className="btn btn-success" to="/createstudent">
-                            + Add Student
+                        <Link className="btn btn-success" to="/create_course">
+                            + Add Course
                         </Link>
                     </div>
 
@@ -75,31 +51,19 @@ function Home() {
                         <table className="table table-striped table-hover">
                             <thead className="table-dark">
                                 <tr>
-                                    {/* <th>ID</th> */}
-                                    <th>Student ID</th>
-                                    <th>First Name</th>
-                                    <th>Email</th>
-                                    <th>Age</th>
-                                    <th>Gender</th>
-                                    <th>Course</th>
+                                    <th>Course ID</th>
+                                    <th>Course Name</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.map((student) => (
-                                    <tr key={student.id}>
+                                {data.map((course) => (
+                                    <tr key={course.id}>
                                         {/* <td>{student.id}</td> */}
-                                        <td>{student.student_id}</td>
-                                        <td>{student.first_name}</td>
-                                        <td>{student.email}</td>
-                                        <td>{student.age}</td>
-                                        <td>{student.gender}</td>
-                                        <td>{courseMap.get(student.studentcourse_id) || 'N/A'}</td> 
+                                        <td>{course.course_id}</td>
+                                        <td>{course.course_name}</td>
                                         <td>
-                                            <Link className="btn btn-info btn-sm me-2" to={`/read/${student.id}`}>
-                                                View
-                                            </Link>
-                                            <Link className="btn btn-warning btn-sm me-2" to={`/edit/student/${student.id}`}>
+                                            <Link className="btn btn-warning btn-sm me-2" to={`/edit/course/${course.id}`}>
                                                 Edit
                                             </Link>
                                             <button 
@@ -114,8 +78,8 @@ function Home() {
                                                     confirmButtonText: "Yes, delete it!"
                                                     }).then((result) => {
                                                     if (result.isConfirmed) {
-                                                        handleDelete(student.id);
-                                                        Swal.fire("Deleted!", "The student has been removed.", "success");
+                                                        handleDelete(course.id);
+                                                        Swal.fire("Deleted!", "The course has been removed.", "success");
                                                     }
                                                     });
                                                 }}
@@ -134,4 +98,4 @@ function Home() {
   )
 }
 
-export default Home
+export default Courses

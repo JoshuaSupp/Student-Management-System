@@ -1,18 +1,20 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import HomeStudent from './pages/HomeStudent';
-import CreateStudent from './pages/CreateStudent';
-import EditStudent from './pages/EditStudent';
-import ReadStudent from './pages/ReadStudent';
+import HomeStudent from './pages/Admin/HomeStudent';
+import CreateStudent from './pages/Admin/CreateStudent';
+import EditStudent from './pages/Admin/EditStudent';
+import ReadStudent from './pages/Admin/ReadStudent';
 import Login from './pages/Login';
 import PrivateRoute from './components/PrivateRoute';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import AdminCourses from './pages/AdminCourse';
-import CreateCourse from './pages/CreateCourse';
-import AdminDashboard from './pages/AdminDashboard';
-import EditCourse from './pages/EditCourse';
+import AdminCourses from './pages/Admin/AdminCourse';
+import CreateCourse from './pages/Admin/CreateCourse';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import EditCourse from './pages/Admin/EditCourse';
+import StudentDashboard from './pages/Student/StudentDashboard';
+import Unauthorized from './pages/Unauthorized';
 
 // Create a wrapper component to handle navigation
 const AppContent = () => {
@@ -44,41 +46,53 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path='/' element={<Login/>} />
-      <Route path='/dashboard' element={<AdminDashboard/>} />
+      <Route path='/dashboard' element={
+        <PrivateRoute allowedRoles={["001"]}>
+          <AdminDashboard /> 
+        </PrivateRoute>
+      }/>   {/* admin */}
       <Route path='/students' element={
-        <PrivateRoute>
+        <PrivateRoute allowedRoles={["001"]}>
           <HomeStudent /> 
         </PrivateRoute>
       }/>   {/* admin */}
       <Route path='/createstudent' element={
-        <PrivateRoute>
+        <PrivateRoute allowedRoles={["001"]}>
           <CreateStudent />
         </PrivateRoute>
       }/>  {/* admin */}
       <Route path='/edit/student/:id' element={
-        <PrivateRoute>
+         <PrivateRoute allowedRoles={["001"]}>
           <EditStudent />
         </PrivateRoute>
       }/>  {/* admin */}
       <Route path='/read/:id' element={
-        <PrivateRoute>
+        <PrivateRoute allowedRoles={["001"]}>
           <ReadStudent />
         </PrivateRoute>
       }/>  {/* admin */}
       <Route path='/admin_course' element={
-        <PrivateRoute>
+        <PrivateRoute allowedRoles={["001"]}>
           <AdminCourses/>
         </PrivateRoute>
       }/> {/* admin */}
       <Route path='/create_course' element={
-        <PrivateRoute>
+        <PrivateRoute allowedRoles={["001"]}>
           <CreateCourse/>
-        </PrivateRoute>
-      }/>
+        </PrivateRoute> 
+      }/>  {/* admin */}
       <Route path='/edit/course/:id' element={
-        <PrivateRoute>
+        <PrivateRoute allowedRoles={["001"]}>
           <EditCourse/>
         </PrivateRoute>
+      }/> {/* admin */}
+      <Route path='/student_dashboard' element={
+       <PrivateRoute allowedRoles={["002"]}>
+        <StudentDashboard/>
+       </PrivateRoute>
+      }/>  {/* student */}
+      <Route path='/unauthorized' element={
+        <Unauthorized/>
       }/>
     </Routes>
   );
