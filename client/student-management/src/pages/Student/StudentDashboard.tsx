@@ -1,8 +1,14 @@
 import React from 'react'
+import StudentNavbar from '../../components/StudentNavbar'
 
 const StudentDashboard = () => {
   return (
-    <div>StudentDashboard</div>
+    <div>
+      <StudentNavbar/>
+      <div>
+        
+      </div>
+    </div>
   )
 }
 

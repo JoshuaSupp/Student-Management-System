@@ -7,8 +7,23 @@ app.use(express.json()); // Middleware to parse JSON requests
 app.use(cors()); // Enable CORS for frontend
 const bcrypt = require('bcryptjs');  // Use bcryptjs 
 const jwt = require('jsonwebtoken'); // Ensure JWT is imported
+const { google } = require("googleapis");
 require('dotenv').config();  
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
+
+
+//Google meet auth
+const oauth2Client = new google.auth.OAuth2(
+  process.env.CLIENT_ID,
+  process.env.CLIENT_SECRET,
+  process.env.REDIRECT_URI
+);
+
+oauth2Client.setCredentials({
+  refresh_token: process.env.REFRESH_TOKEN,
+});
+
+const calendar = google.calendar({ version: "v3", auth: oauth2Client });
 
 //Create MySQL connection
 const db = mysql.createConnection({
@@ -27,63 +42,33 @@ db.connect((err) => {
     console.log('✅ Connected to MySQL Database!');
 });
 
-app.post('/api/add_student', (req, res) => {
-  const { student_id, first_name, email, gender, age, studentcourse_id } = req.body;
+// API Endpoint: Create Google Meet
+app.post("/api/create-meet", async (req, res) => {
+  const { title, start, end } = req.body;
 
-  // Validate input
-  if (!student_id || !first_name || !email || !gender || !age || !studentcourse_id) {
-      return res.status(400).json({ message: 'All fields are required' });
+  try {
+    const event = {
+      summary: title || "Google Meet Meeting",
+      description: "Join via Google Meet",
+      start: { dateTime: start, timeZone: "Asia/Kuala_Lumpur" },
+      end: { dateTime: end, timeZone: "Asia/Kuala_Lumpur" },
+      conferenceData: {
+        createRequest: { requestId: Math.random().toString(36).substring(2, 15) },
+      },
+    };
+
+    const response = await calendar.events.insert({
+      calendarId: "primary",
+      resource: event,
+      conferenceDataVersion: 1,
+    });
+
+    res.json({ meetLink: response.data.hangoutLink });
+  } catch (error) {
+    console.error("❌ Error creating Google Meet:", error);
+    res.status(500).json({ error: "Failed to create meeting" });
   }
-
-  // Start a transaction
-  db.beginTransaction((err) => {
-      if (err) {
-          console.error('❌ Error starting transaction:', err);
-          return res.status(500).json({ message: 'Database error' });
-      }
-
-      // Step 1: Insert the student into student_details
-      const insertStudentSql = `
-          INSERT INTO students_db.student_details 
-          (student_id, first_name, email, gender, age, studentcourse_id) 
-          VALUES (?, ?, ?, ?, ?, ?)
-      `;
-
-      db.query(insertStudentSql, [student_id, first_name, email, gender, age, studentcourse_id], (err, result) => {
-          if (err) {
-              console.error('❌ Error inserting student:', err);
-              return db.rollback(() => {
-                  res.status(500).json({ message: 'Database error while inserting student' });
-              });
-          }
-      
-      //Add student role_id
-      const insertRoleId = "UPDATE student_details SET role_id = ? WHERE student_id";
-
-      const values = ['002', student_id];
-
-      db.query(insertRoleId, values, (err, result) => {
-        if (err) {
-          console.error("Error updating role_id:", err);
-          return;
-        }
-        console.log(`Updated role_id for student_id ${student_id}`);
-      });    
-              // Commit the transaction
-      db.commit((err) => {
-              if (err) {
-                  console.error('❌ Error committing transaction:', err);
-                  return db.rollback(() => {
-                      res.status(500).json({ message: 'Database error while committing transaction' });
-                  });
-              }
-
-                  // Success response
-                  res.status(201).json({ message: 'Student added successfully!' });
-              });
-          });
-      });
-  });
+});
 
 //API to add a course
 app.post('/api/add_course', (req, res) => {
@@ -100,6 +85,41 @@ app.post('/api/add_course', (req, res) => {
           return res.status(500).json({ message: 'Database error' });
       }
       res.status(201).json({ message: 'Course added successfully!', courseId: result.insertId });
+  });
+});
+
+// ✅ API: Create & Save Meeting
+app.post("/api/create_meet", (req, res) => {
+  const { title, start, end } = req.body;
+  const meetLink = `https://meet.google.com/${Math.random().toString(36).substr(2, 10)}`;
+
+  const sql = "INSERT INTO admin_meetings (title, start, end, url) VALUES (?, ?, ?, ?)";
+  db.query(sql, [title, start, end, meetLink], (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Database Error", details: err });
+    }
+    res.json({ meetLink, id: result.insertId });
+  });
+});
+
+// ✅ API: Get All Meetings
+app.get("/api/meetings", (req, res) => {
+  db.query("SELECT * FROM admin_meetings", (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Database Error", details: err });
+    }
+    res.json(results);
+  });
+});
+
+// ✅ API: Delete Meeting
+app.delete("/api/delete_meeting/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("DELETE FROM admin_meetings WHERE id = ?", [id], (err, result) => {
+    if (err) {
+      return res.status(500).json({ error: "Database Error", details: err });
+    }
+    res.json({ message: "Meeting deleted" });
   });
 });
 
@@ -203,6 +223,33 @@ app.post("/api/edit_course/:id", (req, res) => {
     return res.json({ success: "Course updated successfully" });
   });
 });
+
+//API to edit meetings
+app.put('/api/edit_meetings/:id', (req, res) => {
+  const meetingId = req.params.id;
+  const { title, start, end } = req.body;
+
+  if (!title || !start || !end) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const sql = "UPDATE admin_meetings SET title = ?, start = ?, end = ? WHERE id = ?";
+
+  db.query(sql, [title, start, end, meetingId], (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Database update failed" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Meeting not found" });
+    }
+
+    res.json({ message: "Meeting updated successfully" });
+  });
+});
+
+
 
 //API to delete student
 app.delete("/api/delete/:id", (req, res) => {
