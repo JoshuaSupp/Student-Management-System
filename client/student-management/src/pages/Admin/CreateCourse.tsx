@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
 import {Link, useNavigate} from 'react-router-dom'
-import AdminNavbar from '../components/AdminNavbar'
+import AdminNavbar from '../../components/AdminNavbar'
 
 const CreateCourse = () => {
     const [values, setValues] = useState({
@@ -20,9 +20,9 @@ const CreateCourse = () => {
     e.preventDefault();  // Prevent the default form submission
     console.log('Form submitted with values:', values);
   
-    axios.post('/api/admin_courses', values)
+    axios.post('/api/add_course', values)
         .then((res) => {
-            navigate('/students');
+            navigate('/admin_course');
             console.log(res);
         })
         .catch((err) => console.log(err));

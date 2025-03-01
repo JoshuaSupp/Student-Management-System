@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
-import AdminNavbar from "../components/AdminNavbar";
+import AdminNavbar from "../../components/AdminNavbar";
 
 function Read() {
   const [data, setData] = useState([]);

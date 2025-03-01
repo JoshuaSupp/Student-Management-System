@@ -12,7 +12,7 @@ const PieChart: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/admin_courses');
+        const response = await fetch('/api/student_counts');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -43,7 +43,7 @@ const PieChart: React.FC = () => {
   const options = {
     title: 'Student Courses',
     is3D: true,
-    colors: ['#e0440e', '#e6693e', '#f3b600', '#f6ab00'], // Customize colors here
+    colors: ['#09e1d7', '#0a7ae9', '#e99f0a', '#f3cc08', '#f15e14' ], // Customize colors here
     titleTextStyle: {
       fontSize: 24, // Change this value to your desired size (e.g., 18, 20, 24)
     },
@@ -54,7 +54,7 @@ const PieChart: React.FC = () => {
       chartType="PieChart"
       data={chartData}
       options={options}
-      width={"80%"}
+      width={"100%"}
       height={"500px"}
     />
   );

@@ -1,31 +1,75 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import AdminNavbar from "../components/AdminNavbar";
+import AdminNavbar from "../../components/AdminNavbar";
+
+
+interface Course {
+  course_id: number; 
+  course_name: string;
+}
 
 interface Student {
   student_id: string,
-  id: number;
+  id: number | null;
   first_name: string;
   email: string;
-  age: number;
+  age: number | null;
   gender: string;
+  studentcourse_id: string;
 }
 
+
 function Edit() {
-  const [data, setData] = useState<Student[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [data, setData] = useState<Student[]>([{
+    student_id: '',
+    id: null,
+    first_name: '',
+    email: '',
+    age: null,
+    gender: '',
+    studentcourse_id: '',
+  }]);
+
   const { id } = useParams();
+
   useEffect(() => {
     axios
       .get(`/api/get_student/${id}`)
       .then((res) => {
         setData(res.data);
         console.log("Students Data",res.data)
+        setSelectedCourseId(res.data[0].studentcourse_id);
       })
       .catch((err) => console.log(err));
   }, [id]);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await axios.get('/api/admin_courses'); 
+        setCourses(response.data);
+        console.log("Admin Courses",response.data)
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+
+
+  const handleCourseChange = (e: { target: { value: any; }; }) => {
+    const courseId = e.target.value;
+    setSelectedCourseId(courseId); // Update selected course ID
+    setData([{ ...data[0], studentcourse_id: courseId }]); // Update studentcourse_id in data
+};
+
 
   function handleSubmit(e: { preventDefault: () => void; }) {
     e.preventDefault();
@@ -88,22 +132,26 @@ function Edit() {
             />
           </div>
   
-          <div className="mb-3">
-            <label htmlFor="gender" className="form-label">Gender</label>
-            <input
-              value={data[0].gender}
-              type="text"
-              name="gender"
-              className="form-control"
-              required
-              onChange={(e) => setData([{ ...data[0], gender: e.target.value }])}
-            />
+          <div className="form-group my-3">
+                <label htmlFor="gender" className="fw-bold">Gender</label>
+                <select 
+                    name="gender" 
+                    className="form-select"  
+                    value={data[0].gender}
+                    required 
+                    onChange={(e) => setData([{ ...data[0], gender: e.target.value }])}
+                >
+                    <option value="">Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
           </div>
   
           <div className="mb-3">
             <label htmlFor="age" className="form-label">Age</label>
             <input
-              value={data[0].age}
+              value={data[0].age ?? ''}
               type="number"
               name="age"
               className="form-control"
@@ -111,6 +159,25 @@ function Edit() {
               onChange={(e) => setData([{ ...data[0], age: Number(e.target.value) }])}
             />
           </div>
+          
+          <div className="form-group my-3">
+                <label htmlFor="studentcourse_id" className="fw-bold">Course Name</label>
+                <select 
+                  name="studentcourse_id" 
+                  className="form-select"  
+                  value={selectedCourseId} 
+                  onChange={handleCourseChange}
+                  required 
+              >
+                <option value="" disabled>Select a Course</option>
+                  {courses.map((course) => (
+                      <option key={course.course_id} value={course.course_id}>
+                          {course.course_name}
+                      </option>
+                  ))}
+              </select>
+            </div>
+
   
           <div className="d-flex justify-content-between">
             <button type="submit" className="btn btn-success">

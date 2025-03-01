@@ -27,24 +27,6 @@ db.connect((err) => {
     console.log('✅ Connected to MySQL Database!');
 });
 
-//API to add a student
-// app.post('/api/add_student', (req, res) => {
-//     const { student_id,first_name, email, gender, age } = req.body;
-
-//     if (!student_id || !first_name || !email || !gender || !age) {
-//         return res.status(400).json({ message: 'All fields are required' });
-//     }
-
-//     const sql = 'INSERT INTO student_details (student_id,first_name, email, gender, age) VALUES (?,?, ?, ?, ?)';
-//     db.query(sql, [student_id,first_name, email, gender, age], (err, result) => {
-//         if (err) {
-//             console.error('❌ Error inserting user:', err);
-//             return res.status(500).json({ message: 'Database error' });
-//         }
-//         res.status(201).json({ message: 'User added successfully!', userId: result.insertId });
-//     });
-// });
-
 app.post('/api/add_student', (req, res) => {
   const { student_id, first_name, email, gender, age, studentcourse_id } = req.body;
 
@@ -66,6 +48,7 @@ app.post('/api/add_student', (req, res) => {
           (student_id, first_name, email, gender, age, studentcourse_id) 
           VALUES (?, ?, ?, ?, ?, ?)
       `;
+
       db.query(insertStudentSql, [student_id, first_name, email, gender, age, studentcourse_id], (err, result) => {
           if (err) {
               console.error('❌ Error inserting student:', err);
@@ -73,33 +56,27 @@ app.post('/api/add_student', (req, res) => {
                   res.status(500).json({ message: 'Database error while inserting student' });
               });
           }
+      
+      //Add student role_id
+      const insertRoleId = "UPDATE student_details SET role_id = ? WHERE student_id";
 
-          // Step 2: Update the student count in student_courses
-          const updateCourseSql = `
-              UPDATE students_db.student_courses
-              SET student_count = student_count + 1
-              WHERE course_id = ? AND EXISTS (
-                  SELECT 1 
-                  FROM students_db.student_details 
-                  WHERE student_id = ? AND studentcourse_id = ?
-              )
-          `;
-          db.query(updateCourseSql, [studentcourse_id, student_id, studentcourse_id], (err, result) => {
+      const values = ['002', student_id];
+
+      db.query(insertRoleId, values, (err, result) => {
+        if (err) {
+          console.error("Error updating role_id:", err);
+          return;
+        }
+        console.log(`Updated role_id for student_id ${student_id}`);
+      });    
+              // Commit the transaction
+      db.commit((err) => {
               if (err) {
-                  console.error('❌ Error updating course count:', err);
+                  console.error('❌ Error committing transaction:', err);
                   return db.rollback(() => {
-                      res.status(500).json({ message: 'Database error while updating course count' });
+                      res.status(500).json({ message: 'Database error while committing transaction' });
                   });
               }
-
-              // Commit the transaction
-              db.commit((err) => {
-                  if (err) {
-                      console.error('❌ Error committing transaction:', err);
-                      return db.rollback(() => {
-                          res.status(500).json({ message: 'Database error while committing transaction' });
-                      });
-                  }
 
                   // Success response
                   res.status(201).json({ message: 'Student added successfully!' });
@@ -107,7 +84,6 @@ app.post('/api/add_student', (req, res) => {
           });
       });
   });
-});
 
 //API to add a course
 app.post('/api/add_course', (req, res) => {
@@ -146,6 +122,17 @@ app.get("/api/get_student/:id", (req, res) => {
     });
   });
 
+  //API to get specific course
+app.get("/api/get_course/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "SELECT * FROM student_courses WHERE `id`= ?";
+  db.query(sql, [id], (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
+  });
+});
+
+
 //API to get all courses
 app.get("/api/admin_courses", (req, res) => {
   const sql = "SELECT * FROM student_courses";
@@ -183,12 +170,13 @@ app.get("/api/student_counts", (req, res) => {
 app.post("/api/edit_user/:id", (req, res) => {
     const id = req.params.id;
     const sql =
-      "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=? WHERE id=?";
+      "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=?, `studentcourse_id`=? WHERE id=?";
     const values = [
       req.body.first_name,
       req.body.email,
       req.body.age, 
       req.body.gender,
+      req.body.studentcourse_id,
       id,
     ];
     db.query(sql, values, (err, result) => {
@@ -197,6 +185,24 @@ app.post("/api/edit_user/:id", (req, res) => {
       return res.json({ success: "Student updated successfully" });
     });
   });
+
+//API to edit student
+app.post("/api/edit_course/:id", (req, res) => {
+  const id = req.params.id;
+  const sql =
+    "UPDATE student_courses SET `course_name`=? WHERE id=?";
+  const values = [
+    req.body.course_name,
+    id,
+  ];
+ // console.log('Course Name',req.body.course_name);
+ // console.log('Student Count',req.body.student_count);
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Course updated successfully" });
+  });
+});
 
 //API to delete student
 app.delete("/api/delete/:id", (req, res) => {
@@ -210,39 +216,99 @@ app.delete("/api/delete/:id", (req, res) => {
     });
   });
 
+//API to delete student
+app.delete("/api/course_delete/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM student_courses WHERE id=?";
+  const values = [id];
+  db.query(sql, values, (err, result) => {
+    if (err)
+      return res.json({ message: "Something unexpected has occured" + err });
+    return res.json({ success: "Course updated successfully" });
+  });
+});
+
 //login with session
 const secretKey = process.env.JWT_SECRET_KEY;
-app.post("/api/login", (req, res) => {
-  //console.log("Received body:", req.body); // Debugging
+// app.post("/api/login", (req, res) => {
+//   //console.log("Received body:", req.body); // Debugging
 
+//   const { email, password } = req.body;
+
+//   if (!email || !password) {
+//     return res.status(400).json({ message: "Email and password are required" });
+//   }
+
+//   db.query("SELECT * FROM admin WHERE email = ?", [email], (err, result) => {
+//     if (err) {
+//       console.error("Database error:", err);
+//       return res.status(500).json({ message: "Database error" });
+//     }
+
+//     if (result.length === 0) {
+//       return res.status(400).json({ message: "User not found" });
+//     }
+
+//     const user = result[0];
+
+//     // Compare passwords directly (plain text comparison)
+//     if (password === user.password) {
+//       // Generate a JWT token with expiration time (e.g., 15 minutes)
+//       const token = jwt.sign({ userId: user.id }, secretKey, { expiresIn: '15m' });
+
+//       // Send the token back to the client
+//       return res.json({ message: "Login successful", token });
+//     } else {
+//       return res.status(400).json({ message: "Incorrect password" });
+//     }
+//   });
+// });
+
+app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
+  // Check the admin table first
   db.query("SELECT * FROM admin WHERE email = ?", [email], (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ message: "Database error" });
     }
 
-    if (result.length === 0) {
+    if (result.length > 0) {
+      const admin = result[0];
+
+      if (password === admin.password) { // Replace with bcrypt if using hashed passwords
+        const token = jwt.sign({ userId: admin.id, role_id: admin.role_id }, secretKey, { expiresIn: "15m" });
+        return res.json({ message: "Admin login successful", token, role_id: admin.role_id});
+      } else {
+        return res.status(400).json({ message: "Incorrect password" });
+      }
+    }
+
+    // If not found in admin, check the student_details table
+    db.query("SELECT * FROM student_details WHERE email = ?", [email], (err, studentResult) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if (studentResult.length > 0) {
+        const student = studentResult[0];
+
+        if (password === student.password) { // Use bcrypt if passwords are hashed
+          const token = jwt.sign({ userId: student.id, role_id: student.role_id }, secretKey, { expiresIn: "15m" });
+          return res.json({ message: "Student login successful", token, role_id: student.role_id });
+        } else {
+          return res.status(400).json({ message: "Incorrect password" });
+        }
+      }
+
       return res.status(400).json({ message: "User not found" });
-    }
-
-    const user = result[0];
-
-    // Compare passwords directly (plain text comparison)
-    if (password === user.password) {
-      // Generate a JWT token with expiration time (e.g., 15 minutes)
-      const token = jwt.sign({ userId: user.id }, secretKey, { expiresIn: '15m' });
-
-      // Send the token back to the client
-      return res.json({ message: "Login successful", token });
-    } else {
-      return res.status(400).json({ message: "Incorrect password" });
-    }
+    });
   });
 });
 

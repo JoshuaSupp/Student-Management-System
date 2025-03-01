@@ -22,14 +22,21 @@ const Login = () => {
         axios.post("/api/login", { email, password })
             .then((res) => {
                 toast.success("Login Successful!", { position: "top-right", autoClose: 300 });
+                //console.log("Full Response:", res.data);
+                const {role_id} = res.data
 
                 // Store the token in localStorage or sessionStorage
                 localStorage.setItem("token", res.data.token);
                 localStorage.setItem("token_expiry", (Date.now() + 15 * 60 * 1000).toString()); //  15 mins
+                localStorage.setItem("role_id", role_id);
+
+                //console.log("Role_id",role_id)
+
+                const redirectPath = role_id === "001" ? "/dashboard" : "/student_dashboard";
 
                 // Delay navigation to allow toast to be visible
                 setTimeout(() => {
-                  navigate("/dashboard");
+                  navigate(redirectPath);
                 }, 900);
             })
             .catch((error) => {
