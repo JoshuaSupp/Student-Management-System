@@ -18,7 +18,7 @@ const Login = () => {
             .then((res) => {
                 // alert("Login Successful");
                 toast.success("Login Successful!", { position: "top-center", autoClose: 1000 });
-                navigate("/home");
+                navigate("/dashboard");
             })
             .catch((error) => {
                 // alert(error.response?.data?.message || "Try Again");

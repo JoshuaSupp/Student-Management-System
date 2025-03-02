@@ -5,7 +5,7 @@ function Navbar() {
             <h2>Admin Portal</h2>
             <div id="Links">
                 <ul>
-                    <li><a href="#dash">Dashboard</a></li>
+                    <li><a href="/dashboard">Dashboard</a></li>
                     <li><a href="/home">Students</a></li>
                     <li><a href="/courses">Courses</a></li>
                     <li><a href="/">Log Out</a></li>

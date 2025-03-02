@@ -10,6 +10,7 @@ import Courses from './pages/HomeCourses'
 import ReadCourse from './pages/ReadCourse'
 import CreateCourse from './pages/CreateCourse'
 import EditCourse from './pages/EditCourse'
+import Dashboard from './pages/Dashboard'
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
       <Route path='/courses/read/:id' element={<ReadCourse/>} />
       <Route path='/createcourse' element={<CreateCourse/>} />
       <Route path='/courses/edit/:id' element={<EditCourse/>} />
+      <Route path='/dashboard' element={<Dashboard/>} />
     </Routes>
     </BrowserRouter>
   )
