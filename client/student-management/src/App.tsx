@@ -88,6 +88,7 @@ const AppContent = () => {
           <EditCourse/>
         </PrivateRoute>
       }/> {/* admin */}
+    
       <Route path='/admin_create_meeting' element={
         <PrivateRoute allowedRoles={["001"]}>
           <AdminCreateMeeting/>

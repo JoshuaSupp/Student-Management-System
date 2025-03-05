@@ -1,191 +1,179 @@
 import React, { useEffect, useState } from "react";
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import { useForm } from "react-hook-form";
 import axios from "axios";
 import AdminNavbar from "../../components/AdminNavbar";
-import { EventApi } from '@fullcalendar/core';
-
+import moment from "moment-timezone"; // Import moment-timezone for time manipulation
 
 interface Meeting {
-  id: string;  
+  id: number;
   title: string;
   start: string;
   end: string;
   url: string;
 }
 
-const AdminCreateMeeting = () => {
+const AdminCreateMeeting: React.FC = () => {
+  const { register, handleSubmit, reset } = useForm();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+  
 
-  // ✅ Fetch all meetings from backend
+  const convertToTimezone = (dateTime: string, timezone: string) => {
+    return moment(dateTime).tz(timezone).format();
+  };
+
+  const onSubmit = async (data: any) => {
+    setLoading(true);
+
+    try {
+      // Convert start and end to the correct time zone before sending to Google Calendar
+      const startTime = convertToTimezone(data.start, "Asia/Kuala_Lumpur");
+      const endTime = convertToTimezone(data.end, "Asia/Kuala_Lumpur");
+
+      const response = await axios.post("/api/create_meet", {
+        title: data.title,
+        start: startTime,
+        end: endTime,
+      });
+
+      console.log("RESPONSE",response)
+
+      setMeetings([
+        ...meetings,
+        {
+          id: Date.now(),
+          title: data.title,
+          start: startTime,
+          end: endTime,
+          url: response.data.meetLink,
+        },
+      ]);
+
+      reset();
+    } catch (error) {
+      console.error("Error creating meeting:", error);
+    }
+
+    setLoading(false);
+  };
+
+  //fetch meetings
   useEffect(() => {
     const fetchMeetings = async () => {
       try {
-        const response = await axios.get("/api/meetings");
-        const formattedMeetings = response.data.map((meeting: any) => ({
-          ...meeting,
-          id: meeting.id.toString(),  // ✅ Convert ID to string
-        }));
-        setMeetings(formattedMeetings);
+        const response = await axios.get("/api/meetings"); // Call API
+        setMeetings(response.data); // Update state with API data
       } catch (error) {
         console.error("Error fetching meetings:", error);
       }
     };
+  
     fetchMeetings();
   }, []);
 
-  // ✅ Handle date selection & create meeting
-  const handleDateSelect = async (selectInfo: { startStr: string; endStr: string }) => {
-    const title = prompt("Enter Meeting Title:");
-    if (!title) return;
-
-    const start = selectInfo.startStr;
-    const end = selectInfo.endStr;
-
-    setLoading(true);
-
-    try {
-      const response = await axios.post("/api/create_meet", {
-        title,
-        start,
-        end,
-      });
-
-      if (response.data.meetLink) {
-        const newEvent: Meeting = {
-          id: response.data.id,  // ✅ Convert ID to string
-          title: `${title} (Google Meet)`,
-          start,
-          end,
-          url: response.data.meetLink,
-        };
-
-        setMeetings((prevMeetings) => [...prevMeetings, newEvent]); // Update state
-      } else {
-        throw new Error("Failed to create meeting");
-      }
-    } catch (error) {
-      console.error("Error creating meeting:", error);
-      alert("Failed to create Google Meet. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Handle meeting deletion
-  const handleDeleteMeeting = async (meetingId: number) => {
-    if (!window.confirm("Are you sure you want to delete this meeting?")) return;
-
-    try {
-      await axios.delete(`/api/delete_meeting/${meetingId}`);
-      setMeetings(meetings.filter((meeting) => meeting.id.toString() !== meetingId.toString())); // Remove from state
-    } catch (error) {
-      console.error("Error deleting meeting:", error);
-      alert("Failed to delete meeting. Try again.");
-    }
-  };
-
-    // Handle edit meeting
-  const handleEditMeeting = (meeting: Meeting) => {
-    console.log("Editing meeting:", meeting); 
-    setEditingMeeting(meeting);
-  };
-  
-  const saveEditedMeeting = async () => {
-    if (!editingMeeting) return;
-  
-    try {
-      const response = await axios.put(`/api/edit_meetings/${editingMeeting.id}`, {
-        title: editingMeeting.title,
-        start: editingMeeting.start,
-        end: editingMeeting.end,
-      });
-  
-      if (response.status === 200) {
-        // ✅ Update state with the new meeting data
-        setMeetings((prevMeetings) =>
-          prevMeetings.map((m) => (m.id === editingMeeting.id ? response.data : m))
-        );
-  
-        setEditingMeeting(null); // Close the form
-      } else {
-        throw new Error("Failed to update meeting");
-      }
-    } catch (error) {
-      console.error("Error updating meeting:", error);
-      alert("Failed to update meeting. Try again.");
-    }
-  };
-  
-  
-
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100">
       <AdminNavbar />
-      <div style={{ maxWidth: "900px", margin: "auto", marginTop: "50px" }}>
-        <h2 style={{ textAlign: "center" }}>Schedule a Meeting</h2>
-        {loading && <p>Creating meeting...</p>}
+      <div className="container mx-auto p-6">
+        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+          Create a New Meeting
+        </h2>
 
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
-          selectable={true}
-          select={handleDateSelect} // User selects a date/time
-          events={meetings} 
-          eventClick={(info) => window.open(info.event.url, "_blank")} // Open Google Meet link
-        />
-         <h3>Upcoming Meetings</h3>
-        <ul>
-          {meetings.map((meeting) => (
-            <li key={meeting.id}>
-              {meeting.title} - {new Date(meeting.start).toLocaleString()} {" "}
-              <button onClick={() => handleEditMeeting(meeting)} style={{ marginLeft: "10px", color: "blue" }}>
-                Edit
-              </button>
-              <button onClick={() => handleDeleteMeeting(Number(meeting.id))} style={{ marginLeft: "10px", color: "red" }}>
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
-    
-      {editingMeeting && (
-      <div style={{ padding: "10px", border: "1px solid black", marginTop: "10px" }}>
-        <h3>Edit Meeting</h3>
-        <label>Title:</label>
-        <input
-          type="text"
-          value={editingMeeting.title}
-          onChange={(e) => setEditingMeeting({ ...editingMeeting, title: e.target.value })}
-        />
-        <br />
-        <label>Start Time:</label>
-        <input
-          type="datetime-local"
-          value={editingMeeting.start}
-          onChange={(e) => setEditingMeeting({ ...editingMeeting, start: e.target.value })}
-        />
-        <br />
-        <label>End Time:</label>
-        <input
-          type="datetime-local"
-          value={editingMeeting.end}
-          onChange={(e) => setEditingMeeting({ ...editingMeeting, end: e.target.value })}
-        />
-        <br />
-        <button onClick={() => saveEditedMeeting()}>Save</button>
-        <button onClick={() => setEditingMeeting(null)}>Cancel</button>
+        <div className="max-w-lg mx-auto bg-white p-8 shadow-2xl rounded-xl border border-gray-200">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4">
+         {/* Meeting Title */}
+        <div className="mb-3">
+            <label className="fw-bold form-label">Title</label>
+            <input
+            type="text"
+            {...register("title", { required: true })}
+            className="form-control shadow-sm border-0 bg-light"
+            placeholder="Enter Meeting Title"
+            />
+        </div>
+
+        {/* Start & End Time (Side by Side) */}
+        <div className="row">
+            {/* Start Time */}
+            <div className="col-md-6 mb-3">
+            <label className="fw-bold form-label">Start Time</label>
+            <input
+                type="datetime-local"
+                {...register("start", { required: true })}
+                className="form-control shadow-sm border-0 bg-light"
+            />
+            </div>
+
+            {/* End Time */}
+            <div className="col-md-6 mb-3">
+            <label className="fw-bold form-label">End Time</label>
+            <input
+                type="datetime-local"
+                {...register("end", { required: true })}
+                className="form-control shadow-sm border-0 bg-light"
+            />
+            </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="text-center mt-4">
+            <button
+            type="submit"
+            className="btn btn-primary w-100 fw-bold shadow-sm"
+            disabled={loading}
+            >
+            {loading ? "Creating..." : "📅 Generate Google Meet Link"}
+            </button>
+        </div>
+        </form>
+        </div>
+
+
+        
+        {/* Meeting List Table */}
+          {meetings.length > 0 && (
+          <div className="mt-8 max-w-4xl mx-auto">
+            <h3 className="text-xl font-semibold text-gray-800 mb-3">
+              Created Meetings
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-200 shadow-md rounded-lg">
+                <thead>
+                  <tr className="bg-gray-200 text-gray-700">
+                    <th className="border p-3">Title</th>
+                    <th className="border p-3">Start Time</th>
+                    <th className="border p-3">End Time</th>
+                    <th className="border p-3">Google Meet Link</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {meetings.map((meeting) => (
+                    <tr key={meeting.id} className="text-center bg-white">
+                      <td className="border p-3">{meeting.title}</td>
+                      <td className="border p-3">
+                        {new Date(meeting.start).toLocaleString()}
+                      </td>
+                      <td className="border p-3">
+                        {new Date(meeting.end).toLocaleString()}
+                      </td>
+                      <td className="border p-3">
+                        <a
+                          href={meeting.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:text-blue-700 underline"
+                        >
+                          Join Meeting
+                        </a>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+        </div>
+        </div>
+        )}
       </div>
-      )}
-
-      </div>
-
-
-
     </div>
   );
 };

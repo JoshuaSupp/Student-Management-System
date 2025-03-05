@@ -7,6 +7,8 @@ app.use(express.json()); // Middleware to parse JSON requests
 app.use(cors()); // Enable CORS for frontend
 const bcrypt = require('bcryptjs');  // Use bcryptjs 
 const jwt = require('jsonwebtoken'); // Ensure JWT is imported
+const fs = require("fs");
+const moment = require("moment-timezone"); 
 const { google } = require("googleapis");
 require('dotenv').config();  
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
@@ -19,6 +21,7 @@ const oauth2Client = new google.auth.OAuth2(
   process.env.REDIRECT_URI
 );
 
+// Set refresh token
 oauth2Client.setCredentials({
   refresh_token: process.env.REFRESH_TOKEN,
 });
@@ -43,27 +46,79 @@ db.connect((err) => {
 });
 
 // API Endpoint: Create Google Meet
-app.post("/api/create-meet", async (req, res) => {
+
+const convertToLocalTime = (dateTime, timezone) => {
+  // Ensure moment understands the format (could be UTC or any other format)
+  const localTime = moment(dateTime).tz(timezone, true); // Pass 'true' to keep the date in the correct format
+  return localTime.format("YYYY-MM-DDTHH:mm:ss"); // Format for the Google Calendar API (ISO 8601 format)
+};
+
+app.post("/api/create_meet", async (req, res) => {
   const { title, start, end } = req.body;
 
   try {
+    // Log the raw incoming start and end times
+    // console.log("Raw Start Time:", start);
+    // console.log("Raw End Time:", end);
+
+    // Convert start and end times to UTC before creating Google Calendar event
+    const startUtc = moment(start).tz("UTC").format(); // Google Calendar expects UTC time
+    const endUtc = moment(end).tz("UTC").format();
+
+    // Log the converted times
+    // console.log("Converted Start (UTC):", startUtc);
+    // console.log("Converted End (UTC):", endUtc);
+
     const event = {
       summary: title || "Google Meet Meeting",
       description: "Join via Google Meet",
-      start: { dateTime: start, timeZone: "Asia/Kuala_Lumpur" },
-      end: { dateTime: end, timeZone: "Asia/Kuala_Lumpur" },
+      start: { dateTime: startUtc, timeZone: "Asia/Kuala_Lumpur" },
+      end: { dateTime: endUtc, timeZone: "Asia/Kuala_Lumpur" },
       conferenceData: {
-        createRequest: { requestId: Math.random().toString(36).substring(2, 15) },
+        createRequest: {
+          requestId: Math.random().toString(36).substring(2, 15),
+          conferenceSolutionKey: { type: "hangoutsMeet" },
+        },
       },
     };
 
+    // Create event on Google Calendar
     const response = await calendar.events.insert({
       calendarId: "primary",
       resource: event,
-      conferenceDataVersion: 1,
+      conferenceDataVersion: 1, // Required for Google Meet
     });
 
-    res.json({ meetLink: response.data.hangoutLink });
+    // Extract the Google Meet link from the response
+    const meetLink =
+      response.data.conferenceData?.entryPoints?.find(
+        (ep) => ep.entryPointType === "video"
+      )?.uri;
+
+    // Convert start and end times to local time before saving to DB
+    const formattedStart = convertToLocalTime(start, "Asia/Kuala_Lumpur");
+    const formattedEnd = convertToLocalTime(end, "Asia/Kuala_Lumpur");
+
+    // Log the formatted times to verify conversion
+    // console.log("Formatted Start Time for DB:", formattedStart);
+    // console.log("Formatted End Time for DB:", formattedEnd);
+
+    const url = meetLink;
+    // Save the meeting to the MySQL database in local time
+    const query = `
+      INSERT INTO admin_meetings (title, start, end, url)
+      VALUES (?, ?, ?, ?)
+    `;
+
+    db.query(query, [title, formattedStart, formattedEnd, url], (err, result) => {
+      if (err) {
+        console.error("❌ Error saving meeting to DB:", err);
+        return res.status(500).json({ error: "Failed to save meeting to database" });
+      }
+
+      // Respond with the created meeting's Google Meet link
+      res.json({ url });
+    });
   } catch (error) {
     console.error("❌ Error creating Google Meet:", error);
     res.status(500).json({ error: "Failed to create meeting" });
@@ -88,29 +143,24 @@ app.post('/api/add_course', (req, res) => {
   });
 });
 
-// ✅ API: Create & Save Meeting
-app.post("/api/create_meet", (req, res) => {
-  const { title, start, end } = req.body;
-  const meetLink = `https://meet.google.com/${Math.random().toString(36).substr(2, 10)}`;
-
-  const sql = "INSERT INTO admin_meetings (title, start, end, url) VALUES (?, ?, ?, ?)";
-  db.query(sql, [title, start, end, meetLink], (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Database Error", details: err });
-    }
-    res.json({ meetLink, id: result.insertId });
-  });
-});
 
 // ✅ API: Get All Meetings
 app.get("/api/meetings", (req, res) => {
-  db.query("SELECT * FROM admin_meetings", (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Database Error", details: err });
+  db.query(
+    `SELECT id, title, 
+      DATE_FORMAT(start, '%Y-%m-%d %H:%i:%s') AS start, 
+      DATE_FORMAT(end, '%Y-%m-%d %H:%i:%s') AS end, 
+      url
+     FROM admin_meetings`, 
+    (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: "Database Error", details: err });
+      }
+      res.json(results); // Return meetings with the correct fields
     }
-    res.json(results);
-  });
+  );
 });
+
 
 // ✅ API: Delete Meeting
 app.delete("/api/delete_meeting/:id", (req, res) => {
@@ -227,11 +277,20 @@ app.post("/api/edit_course/:id", (req, res) => {
 //API to edit meetings
 app.put('/api/edit_meetings/:id', (req, res) => {
   const meetingId = req.params.id;
-  const { title, start, end } = req.body;
+  let { title, start, end } = req.body;
 
   if (!title || !start || !end) {
     return res.status(400).json({ error: 'All fields are required' });
   }
+
+  // ✅ Extract raw datetime without conversion
+  const formatDateForMySQL = (isoString) => {
+    if (!isoString) return null;
+    return isoString.replace("T", " "); // Convert 'YYYY-MM-DDTHH:MM' to 'YYYY-MM-DD HH:MM:SS'
+  };
+
+  start = formatDateForMySQL(start);
+  end = formatDateForMySQL(end);
 
   const sql = "UPDATE admin_meetings SET title = ?, start = ?, end = ? WHERE id = ?";
 
@@ -248,7 +307,6 @@ app.put('/api/edit_meetings/:id', (req, res) => {
     res.json({ message: "Meeting updated successfully" });
   });
 });
-
 
 
 //API to delete student
