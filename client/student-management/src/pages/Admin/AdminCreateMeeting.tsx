@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import AdminNavbar from "../../components/AdminNavbar";
-import moment from "moment-timezone"; // Import moment-timezone for time manipulation
+import moment from "moment-timezone"; 
+import { useNavigate } from "react-router-dom";
 
 interface Meeting {
   id: number;
@@ -16,7 +17,7 @@ const AdminCreateMeeting: React.FC = () => {
   const { register, handleSubmit, reset } = useForm();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(false);
-  
+  const navigate = useNavigate();
 
   const convertToTimezone = (dateTime: string, timezone: string) => {
     return moment(dateTime).tz(timezone).format();
@@ -36,7 +37,7 @@ const AdminCreateMeeting: React.FC = () => {
         end: endTime,
       });
 
-      console.log("RESPONSE",response)
+      //console.log("RESPONSE",response)
 
       setMeetings([
         ...meetings,
@@ -48,38 +49,53 @@ const AdminCreateMeeting: React.FC = () => {
           url: response.data.meetLink,
         },
       ]);
-
+    await fetchMeetings();
       reset();
     } catch (error) {
       console.error("Error creating meeting:", error);
     }
 
+
     setLoading(false);
   };
 
   //fetch meetings
-  useEffect(() => {
-    const fetchMeetings = async () => {
+  const fetchMeetings = async () => {
       try {
         const response = await axios.get("/api/meetings"); // Call API
         setMeetings(response.data); // Update state with API data
       } catch (error) {
         console.error("Error fetching meetings:", error);
       }
-    };
+  };
   
-    fetchMeetings();
+  useEffect(() => {
+  fetchMeetings();  
   }, []);
+
+
+  const handleDelete = async (id: number) => {
+    try {
+      await axios.delete(`/api/delete_meeting/${id}`); // API call to delete
+      setMeetings(meetings.filter((meeting) => meeting.id !== id)); // Update state
+    } catch (error) {
+      console.error("Error deleting meeting:", error);
+    }
+  };
+
+  const handleEdit = (id: number) => {
+    navigate(`/admin_edit_meeting/${id}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
       <AdminNavbar />
-      <div className="container mx-auto p-6">
+      <div style={{marginTop: "1%"}} className="container mx-auto p-6">
         <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-          Create a New Meeting
+          Create New Class Link
         </h2>
 
-        <div className="max-w-lg mx-auto bg-white p-8 shadow-2xl rounded-xl border border-gray-200">
+        <div style={{marginTop: "1%"}}  className="max-w-lg mx-auto bg-white p-8 shadow-2xl rounded-xl border border-gray-200">
         <form onSubmit={handleSubmit(onSubmit)} className="p-4">
          {/* Meeting Title */}
         <div className="mb-3">
@@ -128,13 +144,11 @@ const AdminCreateMeeting: React.FC = () => {
         </form>
         </div>
 
-
-        
         {/* Meeting List Table */}
           {meetings.length > 0 && (
-          <div className="mt-8 max-w-4xl mx-auto">
+          <div className="mt-8 max-w-4xl mx-auto" style={{marginTop: "3%"}} >
             <h3 className="text-xl font-semibold text-gray-800 mb-3">
-              Created Meetings
+              Created Class Links
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-gray-200 shadow-md rounded-lg">
@@ -144,6 +158,8 @@ const AdminCreateMeeting: React.FC = () => {
                     <th className="border p-3">Start Time</th>
                     <th className="border p-3">End Time</th>
                     <th className="border p-3">Google Meet Link</th>
+                    <th className="border p-3">Edit Meeting</th>
+                    <th className="border p-3">Delete Meeting</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -166,7 +182,17 @@ const AdminCreateMeeting: React.FC = () => {
                           Join Meeting
                         </a>
                       </td>
-                    </tr>
+                      <td className="border p-3">
+                      <button style={{background: "yellow"}}  onClick={() => handleEdit(meeting.id)} className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600">
+                        ✏️ Edit
+                      </button>
+                    </td>
+                    <td className="border p-3">
+                      <button style={{background: "red"}} onClick={() => handleDelete(meeting.id)} className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                        🗑 Delete
+                      </button>
+                    </td>
+                  </tr>
                   ))}
                 </tbody>
               </table>

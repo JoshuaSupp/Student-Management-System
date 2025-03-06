@@ -161,6 +161,29 @@ app.get("/api/meetings", (req, res) => {
   );
 });
 
+// ✅ API: to get meeting details by ID
+app.get("/api/each_meeting/:id", (req, res) => {
+  const { id } = req.params;
+
+  // SQL query to fetch the meeting details by ID
+  const query = "SELECT * FROM admin_meetings WHERE id = ?";
+
+  // Execute the query
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching meeting:", err);
+      return res.status(500).json({ error: "An error occurred while fetching the meeting." });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Meeting not found." });
+    }
+
+    // Return the fetched meeting data
+    return res.status(200).json(results[0]);
+  });
+});
+
 
 // ✅ API: Delete Meeting
 app.delete("/api/delete_meeting/:id", (req, res) => {
@@ -335,39 +358,6 @@ app.delete("/api/course_delete/:id", (req, res) => {
 
 //login with session
 const secretKey = process.env.JWT_SECRET_KEY;
-// app.post("/api/login", (req, res) => {
-//   //console.log("Received body:", req.body); // Debugging
-
-//   const { email, password } = req.body;
-
-//   if (!email || !password) {
-//     return res.status(400).json({ message: "Email and password are required" });
-//   }
-
-//   db.query("SELECT * FROM admin WHERE email = ?", [email], (err, result) => {
-//     if (err) {
-//       console.error("Database error:", err);
-//       return res.status(500).json({ message: "Database error" });
-//     }
-
-//     if (result.length === 0) {
-//       return res.status(400).json({ message: "User not found" });
-//     }
-
-//     const user = result[0];
-
-//     // Compare passwords directly (plain text comparison)
-//     if (password === user.password) {
-//       // Generate a JWT token with expiration time (e.g., 15 minutes)
-//       const token = jwt.sign({ userId: user.id }, secretKey, { expiresIn: '15m' });
-
-//       // Send the token back to the client
-//       return res.json({ message: "Login successful", token });
-//     } else {
-//       return res.status(400).json({ message: "Incorrect password" });
-//     }
-//   });
-// });
 
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
