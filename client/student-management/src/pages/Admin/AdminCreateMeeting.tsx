@@ -10,7 +10,13 @@ interface Meeting {
   title: string;
   start: string;
   end: string;
+  course_name: string;
   url: string;
+}
+
+interface Course {
+  course_id: number; 
+  course_name: string;
 }
 
 const AdminCreateMeeting: React.FC = () => {
@@ -18,6 +24,9 @@ const AdminCreateMeeting: React.FC = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+
 
   const convertToTimezone = (dateTime: string, timezone: string) => {
     return moment(dateTime).tz(timezone).format();
@@ -35,9 +44,10 @@ const AdminCreateMeeting: React.FC = () => {
         title: data.title,
         start: startTime,
         end: endTime,
+        course_id: selectedCourseId,
       });
 
-      //console.log("RESPONSE",response)
+      console.log("RESPONSE",response)
 
       setMeetings([
         ...meetings,
@@ -46,6 +56,7 @@ const AdminCreateMeeting: React.FC = () => {
           title: data.title,
           start: startTime,
           end: endTime,
+          course_name: data.course_name,
           url: response.data.meetLink,
         },
       ]);
@@ -68,9 +79,20 @@ const AdminCreateMeeting: React.FC = () => {
         console.error("Error fetching meetings:", error);
       }
   };
+
+  //fetch courses
+  const fetchCourses = async () => {
+    try {
+      const response = await axios.get("/api/admin_courses"); 
+      setCourses(response.data);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
   
   useEffect(() => {
   fetchMeetings();  
+  fetchCourses(); 
   }, []);
 
 
@@ -129,6 +151,23 @@ const AdminCreateMeeting: React.FC = () => {
                 className="form-control shadow-sm border-0 bg-light"
             />
             </div>
+            {/* Course Selection Dropdown */}
+            <div className="mb-3">
+              <label className="fw-bold form-label">Select Course</label>
+              <select
+                {...register("course_id", { required: true })}
+                onChange={(e) => setSelectedCourseId(e.target.value)}
+                className="form-control shadow-sm border-0 bg-light"
+              >
+                <option value="">-- Select a Course --</option>
+                {courses.map((course) => (
+                  <option key={course.course_id} value={course.course_id}>
+                    {course.course_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
         </div>
 
         {/* Submit Button */}
@@ -157,6 +196,7 @@ const AdminCreateMeeting: React.FC = () => {
                     <th className="border p-3">Title</th>
                     <th className="border p-3">Start Time</th>
                     <th className="border p-3">End Time</th>
+                    <th className="border p-3">Course</th>
                     <th className="border p-3">Google Meet Link</th>
                     <th className="border p-3">Edit Meeting</th>
                     <th className="border p-3">Delete Meeting</th>
@@ -171,6 +211,9 @@ const AdminCreateMeeting: React.FC = () => {
                       </td>
                       <td className="border p-3">
                         {new Date(meeting.end).toLocaleString()}
+                      </td>
+                      <td className="border p-3">
+                          {meeting.course_name || "N/A"}
                       </td>
                       <td className="border p-3">
                         <a

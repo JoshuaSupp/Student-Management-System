@@ -149,21 +149,21 @@ const handleSubmit = async (e: { preventDefault: () => void; }) => {
             </div>
 
             <div className="form-group my-3">
-        <label htmlFor="studentcourse_id" className="fw-bold">Course Name</label>
-        <select
-          name="studentcourse_id"
-          className="form-control"
-          required
-          value={selectedCourseId}
-          onChange={handleCourseChange}
-        >
-          <option value="" disabled>Select a Course</option>
-          {courses.map((course) => (
-            <option key={course.course_id} value={course.course_id}>
-              {course.course_name}
-            </option>
-          ))}
-        </select>
+              <label htmlFor="studentcourse_id" className="fw-bold">Course Name</label>
+              <select
+                name="studentcourse_id"
+                className="form-control"
+                required
+                value={selectedCourseId}
+                onChange={handleCourseChange}
+              >
+                <option value="" disabled>Select a Course</option>
+                {courses.map((course) => (
+                  <option key={course.course_id} value={course.course_id}>
+                    {course.course_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group text-center mt-4">

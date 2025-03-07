@@ -54,7 +54,7 @@ const convertToLocalTime = (dateTime, timezone) => {
 };
 
 app.post("/api/create_meet", async (req, res) => {
-  const { title, start, end } = req.body;
+  const { title, start, end, course_id } = req.body;
 
   try {
     // Log the raw incoming start and end times
@@ -106,11 +106,11 @@ app.post("/api/create_meet", async (req, res) => {
     const url = meetLink;
     // Save the meeting to the MySQL database in local time
     const query = `
-      INSERT INTO admin_meetings (title, start, end, url)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO admin_meetings (title, start, end, url, course_id)
+      VALUES (?, ?, ?, ?,?)
     `;
 
-    db.query(query, [title, formattedStart, formattedEnd, url], (err, result) => {
+    db.query(query, [title, formattedStart, formattedEnd, url, course_id], (err, result) => {
       if (err) {
         console.error("❌ Error saving meeting to DB:", err);
         return res.status(500).json({ error: "Failed to save meeting to database" });
@@ -147,19 +147,24 @@ app.post('/api/add_course', (req, res) => {
 // ✅ API: Get All Meetings
 app.get("/api/meetings", (req, res) => {
   db.query(
-    `SELECT id, title, 
-      DATE_FORMAT(start, '%Y-%m-%d %H:%i:%s') AS start, 
-      DATE_FORMAT(end, '%Y-%m-%d %H:%i:%s') AS end, 
-      url
-     FROM admin_meetings`, 
+    `SELECT m.id, m.title, 
+      DATE_FORMAT(m.start, '%Y-%m-%d %H:%i:%s') AS start, 
+      DATE_FORMAT(m.end, '%Y-%m-%d %H:%i:%s') AS end, 
+      m.url, 
+      m.course_id,
+      c.course_name 
+     FROM admin_meetings m
+     LEFT JOIN student_courses c ON m.course_id = c.course_id`,  
     (err, results) => {
       if (err) {
+        console.error("❌ Database Error:", err);
         return res.status(500).json({ error: "Database Error", details: err });
       }
-      res.json(results); // Return meetings with the correct fields
+      res.json(results); // Return meetings with course_name
     }
   );
 });
+
 
 // ✅ API: to get meeting details by ID
 app.get("/api/each_meeting/:id", (req, res) => {
@@ -300,7 +305,7 @@ app.post("/api/edit_course/:id", (req, res) => {
 //API to edit meetings
 app.put('/api/edit_meetings/:id', (req, res) => {
   const meetingId = req.params.id;
-  let { title, start, end } = req.body;
+  let { title, start, end, course_id } = req.body;
 
   if (!title || !start || !end) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -315,9 +320,9 @@ app.put('/api/edit_meetings/:id', (req, res) => {
   start = formatDateForMySQL(start);
   end = formatDateForMySQL(end);
 
-  const sql = "UPDATE admin_meetings SET title = ?, start = ?, end = ? WHERE id = ?";
+  const sql = "UPDATE admin_meetings SET title = ?, start = ?, end = ?, course_id = ? WHERE id = ?";
 
-  db.query(sql, [title, start, end, meetingId], (err, result) => {
+  db.query(sql, [title, start, end, course_id, meetingId], (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ error: "Database update failed" });

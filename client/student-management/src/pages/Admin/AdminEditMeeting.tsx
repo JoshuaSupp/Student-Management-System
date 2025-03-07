@@ -5,22 +5,51 @@ import axios from "axios";
 import moment from "moment-timezone"; 
 import AdminNavbar from "../../components/AdminNavbar";
 
-const AdminEditMeeting: React.FC = () => {
+interface Course {
+  course_id: string; 
+  course_name: string;
+}
+
+interface AdminEditMeetingProps {
+  meeting?: {
+    course_id: string; 
+    title: string;
+    start: string;
+    end: string;
+  };
+}
+
+const AdminEditMeeting: React.FC<AdminEditMeetingProps> = ({meeting}) => {
+
+  const [data, setData] = useState<Course[]>([{
+    course_id: '',
+    course_name: '',
+  }]);
+
   const { id } = useParams<{ id: string }>(); // Get meeting ID from URL
   const navigate = useNavigate();
   const { register, handleSubmit, setValue } = useForm();
   const [loading, setLoading] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
 
   useEffect(() => {
     const fetchMeeting = async () => {
       try {
         const response = await axios.get(`/api/each_meeting/${id}`);
-        const meeting = response.data;
-        console.log("Response", response);
+        const fetchedmeeting = response.data;
+        console.log("response", response);
+        console.log("fetchedmeeting", fetchedmeeting);
         // Set form values
-        setValue("title", meeting.title);
-        setValue("start", moment(meeting.start).format("YYYY-MM-DDTHH:mm"));
-        setValue("end", moment(meeting.end).format("YYYY-MM-DDTHH:mm"));
+        setValue("title", fetchedmeeting.title);
+        setValue("start", moment(fetchedmeeting.start).format("YYYY-MM-DDTHH:mm"));
+        setValue("end", moment(fetchedmeeting.end).format("YYYY-MM-DDTHH:mm"));
+
+        if (fetchedmeeting.course_id) {
+          console.log("Course_id",fetchedmeeting.course_id)
+          setSelectedCourseId(fetchedmeeting.course_id.toString());
+        }
+        //console.log("fetchedmeeting",fetchedmeeting)
       } catch (error) {
         console.error("Error fetching meeting:", error);
       }
@@ -28,6 +57,20 @@ const AdminEditMeeting: React.FC = () => {
 
     fetchMeeting();
   }, [id, setValue]);
+
+  useEffect(() => {
+      //fetch courses
+   const fetchCourses = async () => {
+    try {
+      const response = await axios.get("/api/admin_courses"); 
+      setCourses(response.data);
+      setSelectedCourseId(meeting?.course_id?.toString() || "");
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    }
+  };
+   fetchCourses();
+  }, [meeting])
 
   const onSubmit = async (data: any) => {
     setLoading(true);
@@ -40,6 +83,7 @@ const AdminEditMeeting: React.FC = () => {
         title: data.title,
         start: startTime,
         end: endTime,
+        course_id: selectedCourseId,
       });
 
       navigate("/admin_create_meeting"); // Redirect after updating
@@ -49,6 +93,12 @@ const AdminEditMeeting: React.FC = () => {
 
     setLoading(false);
   };
+
+  const handleCourseChange = (e: { target: { value: any; }; }) => {
+    const courseId = e.target.value;
+    setSelectedCourseId(courseId); // Update selected course ID
+    setData([{ ...data[0], course_id: courseId }]); // Update studentcourse_id in data
+};
 
   const backButton = () => {
     navigate("/admin_create_meeting");
@@ -97,6 +147,24 @@ const AdminEditMeeting: React.FC = () => {
                   className="form-control shadow-sm border-0 bg-light"
                 />
               </div>
+              {/* Course Selection Dropdown */}
+              <div className="form-group my-3">
+                <label htmlFor="studentcourse_id" className="fw-bold">Course Name</label>
+                <select 
+                  name="studentcourse_id" 
+                  className="form-select"  
+                  value={selectedCourseId} 
+                  onChange={handleCourseChange}
+                  required 
+              >
+                <option value="" disabled>Select a Course</option>
+                  {courses.map((course) => (
+                      <option key={course.course_id} value={course.course_id}>
+                          {course.course_name}
+                      </option>
+                  ))}
+              </select>
+            </div>
             </div>
 
             <div className="text-center mt-4">
