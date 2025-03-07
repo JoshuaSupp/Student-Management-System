@@ -37,7 +37,7 @@ function EditStudent() {
     axios
       .post(`/api/students/edit/${id}`, data[0])
       .then((res) => {
-        navigate("/home");
+        navigate("/students");
         console.log(res);
         toast.success("Student updated successfully", { position: "top-center", autoClose: 1000 });
       })

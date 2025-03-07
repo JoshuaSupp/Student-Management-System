@@ -1,5 +1,6 @@
 import React from 'react'
 import { BrowserRouter,Routes,Route } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import HomeStudent from './pages/HomeStudent'
 import CreateStudent from './pages/CreateStudent'
@@ -15,18 +16,22 @@ import Dashboard from './pages/Dashboard'
 const App = () => {
   return (
     <BrowserRouter>
-    <Routes>
-      <Route path='/' element={<Login/>} />
-      <Route path='/home' element={<HomeStudent/>} />
-      <Route path='/createstudent' element={<CreateStudent/>} />
-      <Route path='/students/edit/:id' element={<EditStudent/>} />
-      <Route path='/students/read/:id' element={<ReadStudent/>} />
-      <Route path='/courses' element={<Courses/>} />
-      <Route path='/courses/read/:id' element={<ReadCourse/>} />
-      <Route path='/createcourse' element={<CreateCourse/>} />
-      <Route path='/courses/edit/:id' element={<EditCourse/>} />
-      <Route path='/dashboard' element={<Dashboard/>} />
-    </Routes>
+      {/* <AuthProvider> */}
+        <Routes>
+          <Route path='/' element={<Login />} />
+          <Route path='/login' element={<Login />} />
+          <Route path='/home' element={<ProtectedRoute><HomeStudent /></ProtectedRoute>} />
+          <Route path='/students' element={<ProtectedRoute><HomeStudent /></ProtectedRoute>} />
+          <Route path='/createstudent' element={<ProtectedRoute><CreateStudent /></ProtectedRoute>} />
+          <Route path='/students/edit/:id' element={<ProtectedRoute><EditStudent /></ProtectedRoute>} />
+          <Route path='/students/read/:id' element={<ProtectedRoute><ReadStudent /></ProtectedRoute>} />
+          <Route path='/courses' element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+          <Route path='/courses/read/:id' element={<ProtectedRoute><ReadCourse /></ProtectedRoute>} />
+          <Route path='/createcourse' element={<ProtectedRoute><CreateCourse /></ProtectedRoute>} />
+          <Route path='/courses/edit/:id' element={<ProtectedRoute><EditCourse /></ProtectedRoute>} />
+          <Route path='/dashboard' element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        </Routes>
+      {/* </AuthProvider> */}
     </BrowserRouter>
   )
 }

@@ -5,9 +5,24 @@ const cors = require('cors'); // To handle CORS issues
 const app = express();
 app.use(express.json()); // Middleware to parse JSON requests
 app.use(cors()); // Enable CORS for frontend
-const bcrypt = require('bcryptjs');  // Use bcryptjs 
-// const jwt = require('jsonwebtoken'); // Ensure JWT is imported
+//const bcrypt = require('bcryptjs');  // Use bcryptjs 
+const jwt = require('jsonwebtoken'); // Ensure JWT is imported
+const secretKey = 'abcde12345';
 
+const token = jwt.sign({
+  id: 1,
+  username: 'GFG'
+}, secretKey, { expiresIn: '1h' });
+
+console.log(token);
+
+jwt.verify(token, 'abcde12345', (err, decoded) => {
+  if (err) {
+    console.log('Token is invalid');
+  } else {
+    console.log('Decoded Token:', decoded);
+  }
+});
 //Create MySQL connection
 const db = mysql.createConnection({
     host: 'localhost',    // MySQL server (local)
@@ -26,7 +41,7 @@ db.connect((err) => {
 });
 
 //API to add a user
-app.post('/students/add', (req, res) => {
+app.post('/api/students/add', (req, res) => {
   const { student_number, first_name, email, gender, age } = req.body;
 
   if (!student_number || !first_name || !email || !gender || !age) {
@@ -44,7 +59,7 @@ app.post('/students/add', (req, res) => {
 });
 
 //API to get all students
-app.get("/students", (req, res) => {
+app.get("/api/students", (req, res) => {
   const sql = "SELECT * FROM student_details";
   db.query(sql, (err, result) => {
     if (err) res.json({ message: "Server error" });
@@ -53,7 +68,7 @@ app.get("/students", (req, res) => {
 });
 
 //API to get specific student
-app.get("/students/get/:id", (req, res) => {
+app.get("/api/students/get/:id", (req, res) => {
   const id = req.params.id;
   const sql = "SELECT * FROM student_details WHERE `id`= ?";
   db.query(sql, [id], (err, result) => {
@@ -63,12 +78,12 @@ app.get("/students/get/:id", (req, res) => {
 });
 
 //API to edit student
-app.post("/students/edit/:id", (req, res) => {
+app.post("/api/students/edit/:id", (req, res) => {
   const id = req.params.id;
   const sql =
     "UPDATE student_details SET `first_name`=?, `email`=?, `age`=?, `gender`=? WHERE id=?";
   const values = [
-    req.body.name,
+    req.body.first_name,
     req.body.email,
     req.body.age,
     req.body.gender,
@@ -82,7 +97,7 @@ app.post("/students/edit/:id", (req, res) => {
 });
 
 //API to delete student
-app.delete("/students/delete/:id", (req, res) => {
+app.delete("/api/students/delete/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM student_details WHERE id=?";
   const values = [id];
@@ -96,7 +111,7 @@ app.delete("/students/delete/:id", (req, res) => {
 //! Courses
 
 //API to add a course
-app.post('/courses/add', (req, res) => {
+app.post('/api/courses/add', (req, res) => {
   const { course_number, name, student_count } = req.body;
 
   if (!course_number || !name || !student_count) {
@@ -114,7 +129,7 @@ app.post('/courses/add', (req, res) => {
 });
 
 //API to get all courses
-app.get("/courses", (req, res) => {
+app.get("/api/courses", (req, res) => {
   const sql = "SELECT * FROM course_details";
   db.query(sql, (err, result) => {
     if (err) res.json({ message: "Server error" });
@@ -123,7 +138,7 @@ app.get("/courses", (req, res) => {
 });
 
 //API to get specific course
-app.get("/courses/get/:id", (req, res) => {
+app.get("/api/courses/get/:id", (req, res) => {
   const id = req.params.id;
   const sql = "SELECT * FROM course_details WHERE `id`= ?";
   db.query(sql, [id], (err, result) => {
@@ -133,7 +148,7 @@ app.get("/courses/get/:id", (req, res) => {
 });
 
 //API to edit course
-app.post("/courses/edit/:id", (req, res) => {
+app.post("/api/courses/edit/:id", (req, res) => {
   const id = req.params.id;
   const sql =
     "UPDATE course_details SET `name`=?, `student_count`=? WHERE id=?";
@@ -150,7 +165,7 @@ app.post("/courses/edit/:id", (req, res) => {
 });
 
 //API to delete course
-app.delete("/courses/delete/:id", (req, res) => {
+app.delete("/api/courses/delete/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM course_details WHERE id=?";
   const values = [id];
@@ -162,33 +177,51 @@ app.delete("/courses/delete/:id", (req, res) => {
 });
 
 // API for admin login (NO SESSION)
-app.post("/login", (req, res) => {
-  console.log("Received body:", req.body); // Debugging
-
+app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
+  // Check the admin table first
   db.query("SELECT * FROM admin WHERE email = ?", [email], (err, result) => {
     if (err) {
       console.error("Database error:", err);
       return res.status(500).json({ message: "Database error" });
     }
 
-    if (result.length === 0) {
+    if (result.length > 0) {
+      const admin = result[0];
+
+      if (password === admin.password) { // Replace with bcrypt if using hashed passwords
+        const token = jwt.sign({ userId: admin.id, role_id: admin.role_id }, secretKey, { expiresIn: "15m" });
+        return res.json({ message: "Admin login successful", token, role_id: admin.role_id});
+      } else {
+        return res.status(400).json({ message: "Incorrect password" });
+      }
+    }
+
+    // If not found in admin, check the student_details table
+    db.query("SELECT * FROM student_details WHERE email = ?", [email], (err, studentResult) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      if (studentResult.length > 0) {
+        const student = studentResult[0];
+
+        if (password === student.password) { // Use bcrypt if passwords are hashed
+          const token = jwt.sign({ userId: student.id, role_id: student.role_id }, secretKey, { expiresIn: "15m" });
+          return res.json({ message: "Student login successful", token, role_id: student.role_id });
+        } else {
+          return res.status(400).json({ message: "Incorrect password" });
+        }
+      }
+
       return res.status(400).json({ message: "User not found" });
-    }
-
-    const user = result[0];
-
-    // Compare passwords directly (plain text comparison)
-    if (password === user.password) {
-      return res.json({ message: "Login successful" });
-    } else {
-      return res.status(400).json({ message: "Incorrect password" });
-    }
+    });
   });
 });
 
