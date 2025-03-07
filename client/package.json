@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@cypress/webpack-dev-server": "^4.0.1",
+    "@types/cypress": "^0.1.6",
+    "@types/node": "^22.13.9",
+    "cypress": "^14.1.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2"
+  }
+}
