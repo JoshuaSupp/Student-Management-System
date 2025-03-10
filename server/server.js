@@ -143,6 +143,33 @@ app.post('/api/add_course', (req, res) => {
   });
 });
 
+app.post("/api/mark_attendance", (req, res) => {
+  //console.log("Received request body:", req.body);
+  const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
+
+
+  if (!student_id || !course_id || !joineddate_time || !class_date || !present_absent) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  const formattedjoineddate_time = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
+  const formattedclassdate_time = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
+
+  const query = `
+    INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  db.query(query, [student_id, course_id, formattedjoineddate_time, formattedclassdate_time, present_absent], (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ message: "Failed to mark attendance" });
+    }
+    res.json({ message: "Attendance marked successfully" });
+  });
+});
+
+
 
 // ✅ API: Get All Meetings
 app.get("/api/meetings", (req, res) => {
@@ -383,14 +410,14 @@ app.post("/api/login", (req, res) => {
 
       if (password === admin.password) { // Replace with bcrypt if using hashed passwords
         const token = jwt.sign({ userId: admin.id, role_id: admin.role_id }, secretKey, { expiresIn: "15m" });
-        return res.json({ message: "Admin login successful", token, role_id: admin.role_id});
+        return res.json({ message: "Admin login successful", token, role_id: admin.role_id });
       } else {
         return res.status(400).json({ message: "Incorrect password" });
       }
     }
 
     // If not found in admin, check the student_details table
-    db.query("SELECT * FROM student_details WHERE email = ?", [email], (err, studentResult) => {
+    db.query("SELECT id, student_id, role_id, studentcourse_id, password FROM student_details WHERE email = ?", [email], (err, studentResult) => {
       if (err) {
         console.error("Database error:", err);
         return res.status(500).json({ message: "Database error" });
@@ -400,19 +427,29 @@ app.post("/api/login", (req, res) => {
         const student = studentResult[0];
 
         if (password === student.password) { // Use bcrypt if passwords are hashed
-          const token = jwt.sign({ userId: student.id, role_id: student.role_id }, secretKey, { expiresIn: "15m" });
-          return res.json({ message: "Student login successful", token, role_id: student.role_id });
+          const token = jwt.sign(
+            { userId: student.id,student_id: student.student_id, role_id: student.role_id, studentcourse_id: student.studentcourse_id }, 
+            secretKey, 
+            { expiresIn: "15m" }
+          );
+
+          return res.json({ 
+            message: "Student login successful", 
+            token, 
+            role_id: student.role_id, 
+            studentcourse_id: student.studentcourse_id,
+            student_id: student.student_id
+          });
         } else {
           return res.status(400).json({ message: "Incorrect password" });
         }
       }
-
       return res.status(400).json({ message: "User not found" });
     });
   });
 });
 
-// Start Server
+
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);

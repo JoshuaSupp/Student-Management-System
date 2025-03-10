@@ -20,7 +20,7 @@ const StudentNavbar = () => {
               <Link className="nav-link" to="/student_attendance">Attendance</Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link" to="/student_dashboard">Lectures</Link>
+              <Link className="nav-link" to="/student_lectures">Lectures</Link>
             </li>
             <li className="nav-item">
               <Link className="nav-link" to="/student_dashboard">Profile</Link>
