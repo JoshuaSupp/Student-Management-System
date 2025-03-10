@@ -10,7 +10,7 @@ interface Course {
   course_name: string;
 }
 
-interface AdminEditMeetingProps {
+interface Meeting {
   meeting?: {
     course_id: string; 
     title: string;
@@ -19,7 +19,7 @@ interface AdminEditMeetingProps {
   };
 }
 
-const AdminEditMeeting: React.FC<AdminEditMeetingProps> = ({meeting}) => {
+const AdminEditMeeting = () => {
 
   const [data, setData] = useState<Course[]>([{
     course_id: '',
@@ -64,13 +64,12 @@ const AdminEditMeeting: React.FC<AdminEditMeetingProps> = ({meeting}) => {
     try {
       const response = await axios.get("/api/admin_courses"); 
       setCourses(response.data);
-      setSelectedCourseId(meeting?.course_id?.toString() || "");
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
   };
    fetchCourses();
-  }, [meeting])
+  }, [])
 
   const onSubmit = async (data: any) => {
     setLoading(true);
