@@ -53,6 +53,7 @@ const convertToLocalTime = (dateTime, timezone) => {
   return localTime.format("YYYY-MM-DDTHH:mm:ss"); // Format for the Google Calendar API (ISO 8601 format)
 };
 
+//API to create a meet
 app.post("/api/create_meet", async (req, res) => {
   const { title, start, end, course_id } = req.body;
 
@@ -125,6 +126,29 @@ app.post("/api/create_meet", async (req, res) => {
   }
 });
 
+//API to create student
+app.post('/api/add_student', (req, res) => {
+  const { student_id, first_name, email, age, gender, studentcourse_id } = req.body;
+
+  if (!student_id || !first_name || !email || !age || !gender || !studentcourse_id) {
+      return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  const insertQuery = `
+      INSERT INTO student_details (student_id, first_name, email, age, gender, studentcourse_id) 
+      VALUES (?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(insertQuery, [student_id, first_name, email, age, gender, studentcourse_id], (err, result) => {
+      if (err) {
+          console.error('Error inserting student:', err);
+          return res.status(500).json({ error: 'Failed to add student' });
+      }
+      res.json({ message: 'Student added successfully', studentId: result.insertId });
+  });
+});
+
+
 //API to add a course
 app.post('/api/add_course', (req, res) => {
   const { course_id, course_name } = req.body;
@@ -143,6 +167,7 @@ app.post('/api/add_course', (req, res) => {
   });
 });
 
+//API to mark attendance
 app.post("/api/mark_attendance", (req, res) => {
   //console.log("Received request body:", req.body);
   const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
@@ -168,8 +193,6 @@ app.post("/api/mark_attendance", (req, res) => {
     res.json({ message: "Attendance marked successfully" });
   });
 });
-
-
 
 // ✅ API: Get All Meetings
 app.get("/api/meetings", (req, res) => {

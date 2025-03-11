@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@cypress/webpack-dev-server": "^4.0.1",
+    "@faker-js/faker": "^9.6.0",
     "@types/cypress": "^0.1.6",
     "@types/node": "^22.13.9",
     "cypress": "^14.1.0",

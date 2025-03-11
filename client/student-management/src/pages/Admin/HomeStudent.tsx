@@ -66,7 +66,7 @@ function Home() {
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <Link to="/" className="btn btn-outline-success btn-sm">🏠 Log Out</Link>
-                        <Link className="btn btn-success" to="/createstudent">
+                        <Link className="btn btn-success" to="/createstudent" id='addStudent'>
                             + Add Student
                         </Link>
                     </div>
