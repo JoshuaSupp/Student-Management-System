@@ -148,7 +148,6 @@ app.post('/api/add_student', (req, res) => {
   });
 });
 
-
 //API to add a course
 app.post('/api/add_course', (req, res) => {
   const { course_id, course_name } = req.body;
@@ -215,7 +214,6 @@ app.get("/api/meetings", (req, res) => {
   );
 });
 
-
 // ✅ API: to get meeting details by ID
 app.get("/api/each_meeting/:id", (req, res) => {
   const { id } = req.params;
@@ -238,7 +236,6 @@ app.get("/api/each_meeting/:id", (req, res) => {
     return res.status(200).json(results[0]);
   });
 });
-
 
 // ✅ API: Delete Meeting
 app.delete("/api/delete_meeting/:id", (req, res) => {
@@ -270,7 +267,7 @@ app.get("/api/get_student/:id", (req, res) => {
     });
   });
 
-  //API to get specific course
+//API to get specific course
 app.get("/api/get_course/:id", (req, res) => {
   const id = req.params.id;
   const sql = "SELECT * FROM student_courses WHERE `id`= ?";
@@ -279,7 +276,6 @@ app.get("/api/get_course/:id", (req, res) => {
     return res.json(result);
   });
 });
-
 
 //API to get all courses
 app.get("/api/admin_courses", (req, res) => {
@@ -313,6 +309,24 @@ app.get("/api/student_counts", (req, res) => {
   });
 });
 
+//API to get attendance
+app.get("/api/student_attendance", (req, res) => {
+  db.query(
+    `SELECT id, 
+      student_id,
+      DATE_FORMAT(joineddate_time, '%Y-%m-%d %H:%i:%s') AS joineddate_time, 
+      DATE_FORMAT(class_date, '%Y-%m-%d %H:%i:%s') AS class_date, 
+      present_absent
+     FROM student_attendance`,  
+    (err, results) => {
+      if (err) {
+        console.error("❌ Database Error:", err);
+        return res.status(500).json({ error: "Database Error", details: err });
+      }
+      res.json(results); 
+    }
+  );
+});
 
 //API to edit student
 app.post("/api/edit_user/:id", (req, res) => {
@@ -386,7 +400,6 @@ app.put('/api/edit_meetings/:id', (req, res) => {
   });
 });
 
-
 //API to delete student
 app.delete("/api/delete/:id", (req, res) => {
     const id = req.params.id;
@@ -413,7 +426,6 @@ app.delete("/api/course_delete/:id", (req, res) => {
 
 //login with session
 const secretKey = process.env.JWT_SECRET_KEY;
-
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
 
