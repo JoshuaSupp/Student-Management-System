@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import useInactivityLogout from '../components/InactivityLogOut';
 
 const Login = () => {
+    useInactivityLogout(); 
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -27,16 +29,21 @@ const Login = () => {
                 const {studentcourse_id} = res.data
                 const {student_id} = res.data
 
+    
+
                 // Store the token in localStorage or sessionStorage
                 localStorage.setItem("token", res.data.token);
-                localStorage.setItem("token_expiry", (Date.now() + 15 * 60 * 1000).toString()); //  15 mins
+                localStorage.setItem("token_expiry", (Date.now() + 30 * 60 * 1000).toString()); //  30 mins
                 localStorage.setItem("role_id", role_id);
                 localStorage.setItem("studentcourse_id", studentcourse_id);
                 sessionStorage.setItem("studentcourse_id", studentcourse_id);
                 sessionStorage.setItem("student_id", student_id);
 
 
+                console.log(res.data)
                 //console.log("Role_id",role_id)
+
+                
 
                 const redirectPath = role_id === "001" ? "/dashboard" : "/student_dashboard";
 
