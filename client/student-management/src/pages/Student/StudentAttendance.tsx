@@ -34,10 +34,10 @@ const StudentAttendance = () => {
     <div>
     <StudentNavbar/>
         <div>
-            <h1>Lecture Attendance </h1>
-
+           
             <div  className="container mx-auto p-6">
             <div className="w-full max-w-4xl ">
+            <h1 className="text-2xl font-bold mb-4">Lecture Attendance</h1>
              {/* Attendance  Table */}
              {attendance.length > 0 && (
                  <div className="overflow-x-auto">
@@ -55,7 +55,9 @@ const StudentAttendance = () => {
               .map((attendance) => (
                 <tr key={attendance.id} className="text-center bg-white">
                   <td className="border p-3">{new Date(attendance.class_date).toLocaleString()}</td>
-                  <td className="border p-3">{new Date(attendance.joineddate_time).toLocaleString()}</td>
+                  <td className="border p-3">{attendance.joineddate_time
+                  ? new Date(attendance.joineddate_time).toLocaleString()
+                  : "Didn't join the class"} </td>
                   <td className="border p-3">{attendance.present_absent}</td>
                 </tr>
               ))}

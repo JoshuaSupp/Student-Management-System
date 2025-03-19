@@ -30,6 +30,7 @@ const StudentLectures = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [student, setStudent] = useState<Student[]>([]);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   
   //fetch meetings
   const fetchMeetings = async () => {
@@ -53,24 +54,28 @@ const StudentLectures = () => {
 
   const studentCourseId = sessionStorage.getItem("studentcourse_id");
 
-  const markAttendance = async ( classDate: any) => {
+  const markAttendance = async ( meeting: any) => {
     const studentId = sessionStorage.getItem("student_id");
     const studentCourseId = sessionStorage.getItem("studentcourse_id");
+    const now = new Date();
+    const startTime = new Date(meeting.start)
+    const endTime = new Date(meeting.end)
   
     if (!studentId || !studentCourseId) {
       console.error("Student ID or Course ID not found in sessionStorage");
       return;
     }
  
+  if(now >= startTime && now <= endTime){
   const attendanceData = {
     student_id: studentId,
     course_id: studentCourseId,
     joineddate_time: new Date().toISOString(), // Current Date & Time
-    class_date: new Date(classDate).toISOString(), 
+    class_date: new Date(meeting.classDate).toISOString(), 
     present_absent: "Present",
   };
 
-  console.log("Sending attendance data:", attendanceData);
+  //console.log("Sending attendance data:", attendanceData);
 
   try {
     const response = await fetch("/api/mark_attendance", {
@@ -87,11 +92,21 @@ const StudentLectures = () => {
   } catch (error) {
     console.error("Error marking attendance:", error);
   }
-
+}
   };
+
+  const fetchTimeInterval = async () => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    console.log("Time Interval",interval )
+    return () => clearInterval(interval);
+  }
+
   useEffect(() => {
     fetchMeetings();  
     fetchCourses();
+    fetchTimeInterval();
   }, []);
   
   return (
@@ -99,7 +114,7 @@ const StudentLectures = () => {
     <StudentNavbar />
     <div  className="container mx-auto p-6">
     <div className="w-full max-w-4xl ">
-    <h1 className="text-2xl font-bold mb-4">Lecture Links</h1>
+    <h1 className="text-2xl font-bold mb-4">Lectures</h1>
     {/* Meeting List Table */}
     {meetings.length > 0 && (
       <div className="overflow-x-auto">
@@ -128,7 +143,7 @@ const StudentLectures = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-500 hover:text-blue-700 underline"
-                      onClick={() => markAttendance( meeting.start)}
+                      onClick={() => markAttendance( meeting)}
                     >
                       Join Meeting
                     </a>

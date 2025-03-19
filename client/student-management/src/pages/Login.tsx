@@ -29,8 +29,6 @@ const Login = () => {
                 const {studentcourse_id} = res.data
                 const {student_id} = res.data
 
-    
-
                 // Store the token in localStorage or sessionStorage
                 localStorage.setItem("token", res.data.token);
                 localStorage.setItem("token_expiry", (Date.now() + 30 * 60 * 1000).toString()); //  30 mins
@@ -39,11 +37,8 @@ const Login = () => {
                 sessionStorage.setItem("studentcourse_id", studentcourse_id);
                 sessionStorage.setItem("student_id", student_id);
 
-
                 console.log(res.data)
                 //console.log("Role_id",role_id)
-
-                
 
                 const redirectPath = role_id === "001" ? "/dashboard" : "/student_dashboard";
 
@@ -52,10 +47,10 @@ const Login = () => {
                   navigate(redirectPath);
                 }, 900);
             })
-            .catch((error) => {
-                toast.error("Invalid email or password", { position: "top-right", autoClose: 600 });
-                console.error(error);
-            });
+                .catch((error) => {
+                    toast.error("Invalid email or password", { position: "top-right", autoClose: 600 });
+                    console.error(error);
+                });
     };
     
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors'); // To handle CORS issues
-
+const cron = require("node-cron"); //cron 
 const app = express();
 app.use(express.json()); // Middleware to parse JSON requests
 app.use(cors()); // Enable CORS for frontend
@@ -135,11 +135,13 @@ app.post('/api/add_student', (req, res) => {
   }
 
   const insertQuery = `
-      INSERT INTO student_details (student_id, first_name, email, age, gender, studentcourse_id) 
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO student_details (student_id, first_name, email, age, gender, studentcourse_id, role_id) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(insertQuery, [student_id, first_name, email, age, gender, studentcourse_id], (err, result) => {
+  const role_id = "002";
+
+  db.query(insertQuery, [student_id, first_name, email, age, gender, studentcourse_id,role_id], (err, result) => {
       if (err) {
           console.error('Error inserting student:', err);
           return res.status(500).json({ error: 'Failed to add student' });
@@ -167,31 +169,199 @@ app.post('/api/add_course', (req, res) => {
 });
 
 //API to mark attendance
-app.post("/api/mark_attendance", (req, res) => {
-  //console.log("Received request body:", req.body);
-  const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
+// app.post("/api/mark_attendance", (req, res) => {
+//   //console.log("Received request body:", req.body);
+//   const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
 
+
+//   if (!student_id || !course_id || !joineddate_time || !class_date || !present_absent) {
+//     return res.status(400).json({ message: "All fields are required" });
+//   }
+
+//   const formattedjoineddate_time = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
+//   const formattedclassdate_time = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
+
+//   const query = `
+//     INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
+//     VALUES (?, ?, ?, ?, ?)
+//   `;
+
+//   db.query(query, [student_id, course_id, formattedjoineddate_time, formattedclassdate_time, present_absent], (err, result) => {
+//     if (err) {
+//       console.error("Database error:", err);
+//       return res.status(500).json({ message: "Failed to mark attendance" });
+//     }
+//     res.json({ message: "Attendance marked successfully" });
+//   });
+// });
+
+app.post("/api/mark_attendance", (req, res) => {
+  const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
 
   if (!student_id || !course_id || !joineddate_time || !class_date || !present_absent) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  const formattedjoineddate_time = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
-  const formattedclassdate_time = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
-
-  const query = `
-    INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-
-  db.query(query, [student_id, course_id, formattedjoineddate_time, formattedclassdate_time, present_absent], (err, result) => {
+  // Check if student exists before processing
+  db.query("SELECT * FROM student_details WHERE student_id = ?", [student_id], (err, studentExists) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ message: "Failed to mark attendance" });
+      return res.status(500).json({ message: "Database error" });
     }
-    res.json({ message: "Attendance marked successfully" });
+
+    if (studentExists.length === 0) {
+      return res.status(400).json({ message: "Invalid student ID. Student does not exist." });
+    }
+
+    // Validate if student is enrolled in the course
+    db.query(
+      "SELECT * FROM student_details WHERE student_id = ? AND studentcourse_id = ?",
+      [student_id, course_id],
+      (err, checkEnrollment) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ message: "Database error" });
+        }
+
+        if (checkEnrollment.length === 0) {
+          return res.status(400).json({ message: "Student is not enrolled in this course" });
+        }
+
+        const formattedJoinedDate = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
+        const formattedClassDate = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
+
+        // Insert attendance record
+        db.query(
+          `INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
+           VALUES (?, ?, ?, ?, ?)`,
+          [student_id, course_id, formattedJoinedDate, formattedClassDate, present_absent],
+          (err, result) => {
+            if (err) {
+              console.error("Database error:", err);
+              return res.status(500).json({ message: "Failed to mark attendance" });
+            }
+            res.json({ message: "Attendance marked successfully" });
+          }
+        );
+      }
+    );
   });
 });
+
+// 📌 CRON Job to mark absences for missed classes
+cron.schedule("*/1 * * * *", () => {
+  console.log("Running attendance check...");
+
+  // Get all past meetings that have ended
+  db.query("SELECT * FROM admin_meetings WHERE end < NOW()", (err, meetings) => {
+    if (err) {
+      console.error("Error fetching meetings:", err);
+      return;
+    }
+
+    meetings.forEach((meeting) => {
+      const { id, start, course_id } = meeting;
+
+      // Get students who attended this class
+      db.query(
+        "SELECT student_id FROM student_attendance WHERE class_date = ? AND course_id = ?",
+        [start, course_id],
+        (err, attendedStudents) => {
+          if (err) {
+            console.error("Error fetching attendance records:", err);
+            return;
+          }
+
+          // Get all students enrolled in the course
+          db.query(
+            "SELECT student_id FROM student_details WHERE studentcourse_id = ?",
+            [course_id],
+            (err, allStudents) => {
+              if (err) {
+                console.error("Error fetching enrolled students:", err);
+                return;
+              }
+
+              // Find students who DID NOT attend
+              const attendedSet = new Set(attendedStudents.map((s) => s.student_id));
+              const absentStudents = allStudents.filter((s) => !attendedSet.has(s.student_id));
+
+              if (absentStudents.length === 0) {
+                console.log(`No absentees for course ${course_id}`);
+                return;
+              }
+
+              // Convert class date to local format
+              const formattedClassDate = convertToLocalTime(start, "Asia/Kuala_Lumpur");
+              let checkedCount = 0;
+              const absentValues = [];
+
+              absentStudents.forEach((s) => {
+                db.query(
+                  "SELECT student_id FROM student_details WHERE student_id = ?",
+                  [s.student_id],
+                  (err, result) => {
+                    if (err) {
+                      console.error("Error checking student existence:", err);
+                      return;
+                    }
+
+                    if (result.length > 0) {
+                      // Check if attendance already exists
+                      db.query(
+                        "SELECT * FROM student_attendance WHERE student_id = ? AND class_date = ? AND course_id = ?",
+                        [s.student_id, formattedClassDate, course_id],
+                        (err, existingRecord) => {
+                          if (err) {
+                            console.error("Error checking duplicate attendance:", err);
+                            return;
+                          }
+
+                          if (existingRecord.length === 0) {
+                            absentValues.push(
+                              `('${s.student_id}', '${course_id}', NULL, '${formattedClassDate}', 'Absent')`
+                            );
+                          } else {
+                            console.log(
+                              `Skipping student ID ${s.student_id} - already marked absent.`
+                            );
+                          }
+
+                          checkedCount++;
+                          if (checkedCount === absentStudents.length && absentValues.length > 0) {
+                            // Execute the insert only after all checks are completed
+                            const query = `
+                              INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
+                              VALUES ${absentValues.join(",")}
+                            `;
+
+                            db.query(query, (err) => {
+                              if (err) {
+                                console.error("Error inserting absent students:", err);
+                              } else {
+                                console.log(
+                                  `Marked ${absentValues.length} students as absent for course ${course_id}`
+                                );
+                              }
+                            });
+                          }
+                        }
+                      );
+                    } else {
+                      console.log(`Skipping student ID ${s.student_id} - does not exist.`);
+                      checkedCount++;
+                    }
+                  }
+                );
+              });
+            }
+          );
+        }
+      );
+    });
+  });
+});
+
 
 // ✅ API: Get All Meetings
 app.get("/api/meetings", (req, res) => {
@@ -327,6 +497,49 @@ app.get("/api/student_attendance", (req, res) => {
     }
   );
 });
+
+//API to get attendance data for student pie chart
+app.get("/api/student_attendance/:student_id", (req, res) => {
+  const { student_id } = req.params;
+
+  const query = `
+                SELECT sa.student_id, sa.class_date, sa.present_absent, sa.joineddate_time
+                FROM student_attendance sa
+                JOIN (
+                    SELECT student_id, class_date, 
+                          MAX(joineddate_time) AS latest_joined
+                    FROM student_attendance
+                    WHERE student_id = ?
+                    GROUP BY student_id, class_date
+                ) latest 
+                ON sa.student_id = latest.student_id 
+                AND sa.class_date = latest.class_date 
+                AND (
+                    sa.joineddate_time = latest.latest_joined 
+                    OR (latest.latest_joined IS NULL AND sa.joineddate_time IS NULL)
+                )
+                ORDER BY sa.class_date DESC;
+                `;
+
+  db.query(query, [student_id], (err, results) => {
+    if (err) {
+      console.error("❌ Database Error:", err);
+      return res.status(500).json({ error: "Database Error", details: err });
+    }
+
+    const totalClasses = results.length;
+    const attendedClasses = results.filter((row) => row.present_absent === "Present").length;
+    const missedClasses = totalClasses - attendedClasses;
+
+    const attendanceData = [
+      { name: "Present", value: attendedClasses },
+      { name: "Absent", value: missedClasses },
+    ];
+
+    res.json({ totalClasses, attendedClasses, missedClasses, attendanceData });
+  });
+});
+
 
 //API to edit student
 app.post("/api/edit_user/:id", (req, res) => {
