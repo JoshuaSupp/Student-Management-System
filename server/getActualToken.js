@@ -8,7 +8,7 @@ const oauth2Client = new google.auth.OAuth2(
 );
 
 // 🔹 Paste the extracted code here
-const CODE = "4/0AQSTgQHwf7ODpsBZU5tJo_SFYwhk_qKQqMTgFNdKGR_8TwkAiRF7t6EbgeLRFAxyozrFxw";
+const CODE = "4/0AQSTgQEl9My0xDp_NJIGzj3Wc0sahCgYG9D9d_-pSOmYAvVIeH8n124nsqL6qyKYAVTL_w";
 
 async function getRefreshToken() {
   try {

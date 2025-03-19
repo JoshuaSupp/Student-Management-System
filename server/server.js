@@ -614,16 +614,27 @@ app.put('/api/edit_meetings/:id', (req, res) => {
 });
 
 //API to delete student
-app.delete("/api/delete/:id", (req, res) => {
-    const id = req.params.id;
-    const sql = "DELETE FROM student_details WHERE id=?";
-    const values = [id];
-    db.query(sql, values, (err, result) => {
-      if (err)
-        return res.json({ message: "Something unexpected has occured" + err });
-      return res.json({ success: "Student updated successfully" });
-    });
+app.delete("/api/delete/:student_id", (req, res) => {
+  const student_id = req.params.student_id;
+  //console.log("Delete id",student_id)
+  // First, delete the student's attendance records
+  db.query("DELETE FROM student_attendance WHERE student_id = ?", [student_id], (err, result) => {
+      if (err) {
+          console.error("Error deleting attendance records:", err);
+          return res.status(500).json({ message: "Error deleting attendance records" });
+      }
+
+      // Then, delete the student from student_details
+      db.query("DELETE FROM student_details WHERE student_id = ?", [student_id], (err, result) => {
+          if (err) {
+              console.error("Error deleting student:", err);
+              return res.status(500).json({ message: "Error deleting student" });
+          }
+          return res.json({ success: "Student deleted successfully" });
+      });
   });
+});
+
 
 //API to delete student
 app.delete("/api/course_delete/:id", (req, res) => {

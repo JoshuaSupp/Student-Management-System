@@ -60,6 +60,8 @@ const StudentLectures = () => {
     const now = new Date();
     const startTime = new Date(meeting.start)
     const endTime = new Date(meeting.end)
+
+    console.log(studentId)
   
     if (!studentId || !studentCourseId) {
       console.error("Student ID or Course ID not found in sessionStorage");

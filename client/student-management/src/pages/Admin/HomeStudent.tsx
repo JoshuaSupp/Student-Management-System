@@ -44,8 +44,8 @@ function Home() {
     }
     }, [deleted])
     
-    function handleDelete(id: any){
-        axios.delete(`/api/delete/${id}`)
+    function handleDelete(student_id: any){
+        axios.delete(`/api/delete/${student_id}`)
         .then((res)=>{
             setDeleted(true)
         })
@@ -114,7 +114,7 @@ function Home() {
                                                     confirmButtonText: "Yes, delete it!"
                                                     }).then((result) => {
                                                     if (result.isConfirmed) {
-                                                        handleDelete(student.id);
+                                                        handleDelete(student.student_id);
                                                         Swal.fire("Deleted!", "The student has been removed.", "success");
                                                     }
                                                     });
