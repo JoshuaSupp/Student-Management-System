@@ -55,13 +55,18 @@ const StudentLectures = () => {
   const studentCourseId = sessionStorage.getItem("studentcourse_id");
 
   const markAttendance = async ( meeting: any) => {
+    console.log("markAttendance function triggered", meeting);
     const studentId = sessionStorage.getItem("student_id");
     const studentCourseId = sessionStorage.getItem("studentcourse_id");
     const now = new Date();
     const startTime = new Date(meeting.start)
     const endTime = new Date(meeting.end)
 
-    console.log(studentId)
+    console.log("studentId",studentId)
+    console.log("studentCourseId",studentCourseId)
+    console.log("now",now)
+    console.log("startTime",startTime)
+    console.log("endTime",endTime)
   
     if (!studentId || !studentCourseId) {
       console.error("Student ID or Course ID not found in sessionStorage");
@@ -72,8 +77,8 @@ const StudentLectures = () => {
   const attendanceData = {
     student_id: studentId,
     course_id: studentCourseId,
-    joineddate_time: new Date().toISOString(), // Current Date & Time
-    class_date: new Date(meeting.classDate).toISOString(), 
+    joineddate_time: now, // Current Date & Time
+    class_date: startTime, 
     present_absent: "Present",
   };
 

@@ -169,84 +169,84 @@ app.post('/api/add_course', (req, res) => {
 });
 
 //API to mark attendance
-// app.post("/api/mark_attendance", (req, res) => {
-//   //console.log("Received request body:", req.body);
-//   const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
-
-
-//   if (!student_id || !course_id || !joineddate_time || !class_date || !present_absent) {
-//     return res.status(400).json({ message: "All fields are required" });
-//   }
-
-//   const formattedjoineddate_time = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
-//   const formattedclassdate_time = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
-
-//   const query = `
-//     INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
-//     VALUES (?, ?, ?, ?, ?)
-//   `;
-
-//   db.query(query, [student_id, course_id, formattedjoineddate_time, formattedclassdate_time, present_absent], (err, result) => {
-//     if (err) {
-//       console.error("Database error:", err);
-//       return res.status(500).json({ message: "Failed to mark attendance" });
-//     }
-//     res.json({ message: "Attendance marked successfully" });
-//   });
-// });
-
 app.post("/api/mark_attendance", (req, res) => {
+  //console.log("Received request body:", req.body);
   const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
+
 
   if (!student_id || !course_id || !joineddate_time || !class_date || !present_absent) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  // Check if student exists before processing
-  db.query("SELECT * FROM student_details WHERE student_id = ?", [student_id], (err, studentExists) => {
+  const formattedjoineddate_time = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
+  const formattedclassdate_time = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
+
+  const query = `
+    INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+
+  db.query(query, [student_id, course_id, formattedjoineddate_time, formattedclassdate_time, present_absent], (err, result) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({ message: "Database error" });
+      return res.status(500).json({ message: "Failed to mark attendance" });
     }
-
-    if (studentExists.length === 0) {
-      return res.status(400).json({ message: "Invalid student ID. Student does not exist." });
-    }
-
-    // Validate if student is enrolled in the course
-    db.query(
-      "SELECT * FROM student_details WHERE student_id = ? AND studentcourse_id = ?",
-      [student_id, course_id],
-      (err, checkEnrollment) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({ message: "Database error" });
-        }
-
-        if (checkEnrollment.length === 0) {
-          return res.status(400).json({ message: "Student is not enrolled in this course" });
-        }
-
-        const formattedJoinedDate = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
-        const formattedClassDate = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
-
-        // Insert attendance record
-        db.query(
-          `INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
-           VALUES (?, ?, ?, ?, ?)`,
-          [student_id, course_id, formattedJoinedDate, formattedClassDate, present_absent],
-          (err, result) => {
-            if (err) {
-              console.error("Database error:", err);
-              return res.status(500).json({ message: "Failed to mark attendance" });
-            }
-            res.json({ message: "Attendance marked successfully" });
-          }
-        );
-      }
-    );
+    res.json({ message: "Attendance marked successfully" });
   });
 });
+
+// app.post("/api/mark_attendance", (req, res) => {
+//   const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
+
+//   if (!student_id || !course_id || !joineddate_time || !class_date || !present_absent) {
+//     return res.status(400).json({ message: "All fields are required" });
+//   }
+
+//   // Check if student exists before processing
+//   db.query("SELECT * FROM student_details WHERE student_id = ?", [student_id], (err, studentExists) => {
+//     if (err) {
+//       console.error("Database error:", err);
+//       return res.status(500).json({ message: "Database error" });
+//     }
+
+//     if (studentExists.length === 0) {
+//       return res.status(400).json({ message: "Invalid student ID. Student does not exist." });
+//     }
+
+//     // Validate if student is enrolled in the course
+//     db.query(
+//       "SELECT * FROM student_details WHERE student_id = ? AND studentcourse_id = ?",
+//       [student_id, course_id],
+//       (err, checkEnrollment) => {
+//         if (err) {
+//           console.error("Database error:", err);
+//           return res.status(500).json({ message: "Database error" });
+//         }
+
+//         if (checkEnrollment.length === 0) {
+//           return res.status(400).json({ message: "Student is not enrolled in this course" });
+//         }
+
+//         const formattedJoinedDate = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
+//         const formattedClassDate = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
+
+//         // Insert attendance record
+//         db.query(
+//           `INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
+//            VALUES (?, ?, ?, ?, ?)`,
+//           [student_id, course_id, formattedJoinedDate, formattedClassDate, present_absent],
+//           (err, result) => {
+//             if (err) {
+//               console.error("Database error:", err);
+//               return res.status(500).json({ message: "Failed to mark attendance" });
+//             }
+//             res.json({ message: "Attendance marked successfully" });
+//           }
+//         );
+//       }
+//     );
+//   });
+// });
 
 // 📌 CRON Job to mark absences for missed classes
 cron.schedule("*/1 * * * *", () => {
@@ -480,22 +480,47 @@ app.get("/api/student_counts", (req, res) => {
 });
 
 //API to get attendance
+// app.get("/api/student_attendance", (req, res) => {
+//   db.query(
+//     `SELECT id, 
+//       student_id,
+//       DATE_FORMAT(joineddate_time, '%Y-%m-%d %H:%i:%s') AS joineddate_time, 
+//       DATE_FORMAT(class_date, '%Y-%m-%d %H:%i:%s') AS class_date, 
+//       present_absent
+//      FROM student_attendance`,  
+//     (err, results) => {
+//       if (err) {
+//         console.error("❌ Database Error:", err);
+//         return res.status(500).json({ error: "Database Error", details: err });
+//       }
+//       res.json(results); 
+//     }
+//   );
+// });
+
 app.get("/api/student_attendance", (req, res) => {
-  db.query(
-    `SELECT id, 
-      student_id,
-      DATE_FORMAT(joineddate_time, '%Y-%m-%d %H:%i:%s') AS joineddate_time, 
-      DATE_FORMAT(class_date, '%Y-%m-%d %H:%i:%s') AS class_date, 
-      present_absent
-     FROM student_attendance`,  
-    (err, results) => {
-      if (err) {
-        console.error("❌ Database Error:", err);
-        return res.status(500).json({ error: "Database Error", details: err });
-      }
-      res.json(results); 
+  const sql = `
+    SELECT 
+    sa.id, 
+    sa.student_id,
+    sa.course_id,
+    DATE_FORMAT(sa.joineddate_time, '%Y-%m-%d %H:%i:%s') AS joineddate_time, 
+    DATE_FORMAT(sa.class_date, '%Y-%m-%d %H:%i:%s') AS class_date, 
+    sa.present_absent,
+    am.title AS lecture_title  
+  FROM student_attendance sa
+  LEFT JOIN admin_meetings am 
+    ON sa.course_id = am.course_id 
+    AND sa.class_date = am.start
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("❌ Database Error:", err);
+      return res.status(500).json({ error: "Database Error", details: err });
     }
-  );
+    res.json(results);
+  });
 });
 
 //API to get attendance data for student pie chart

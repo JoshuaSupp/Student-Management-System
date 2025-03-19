@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import StudentNavbar from '../../components/StudentNavbar'
 import axios from 'axios';
 
+
+
 interface Attendance {
   id: number;
   student_id: string;
@@ -9,6 +11,7 @@ interface Attendance {
   joineddate_time: string;
   class_date: string;
   present_absent: string;
+  lecture_title: string;
 }
 
 const StudentAttendance = () => {
@@ -16,8 +19,8 @@ const StudentAttendance = () => {
   
   const fetchAttendance = async () =>{
     try {
-      const response = await axios.get("/api/student_attendance"); // Call API
-      setAttendance(response.data); // Update state with API data
+      const response = await axios.get("/api/student_attendance"); 
+      setAttendance(response.data); 
       console.log(response.data)
     } catch (error) {
       console.error("Error fetching meetings:", error);
@@ -44,6 +47,7 @@ const StudentAttendance = () => {
                  <table className="w-full border-collapse border border-gray-200 shadow-md rounded-lg">
                    <thead>
                      <tr className="bg-gray-200 text-gray-700">
+                       <th className="border p-3">Lecture</th>
                        <th className="border p-3">Lecture Date & Time</th>
                        <th className="border p-3">Lecture Joined Date & Time</th>
                        <th className="border p-3">Present/Absent</th>
@@ -54,6 +58,7 @@ const StudentAttendance = () => {
               .filter((attendance) => attendance.student_id === studentId)
               .map((attendance) => (
                 <tr key={attendance.id} className="text-center bg-white">
+                  <td className="border p-3">{attendance.lecture_title}</td>
                   <td className="border p-3">{new Date(attendance.class_date).toLocaleString()}</td>
                   <td className="border p-3">{attendance.joineddate_time
                   ? new Date(attendance.joineddate_time).toLocaleString()

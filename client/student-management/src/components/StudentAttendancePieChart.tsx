@@ -33,7 +33,7 @@ const StudentAttendancePieChart = () => {
     pieHole: 0.4,
     is3D: false,
     backgroundColor: "transparent",
-    colors: ["#36A2EB", "#FF6384"],
+    colors: ["#36A2EB", "#f01308"],
     chartArea: { width: "80%", height: "80%" },
     legend: { position: "bottom" },
   };
