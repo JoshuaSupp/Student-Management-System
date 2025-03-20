@@ -22,6 +22,9 @@ const AdminNavbar = () => {
               <Link className="nav-link" to="/admin_course">Courses</Link>
             </li>
             <li className="nav-item">
+              <Link className="nav-link" to="/admin_create_meeting">Lectures</Link>
+            </li>
+            <li className="nav-item">
               <Link className="nav-link" to="/">Log Out</Link>
             </li>
           </ul>

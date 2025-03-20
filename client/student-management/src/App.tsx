@@ -15,6 +15,10 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import EditCourse from './pages/Admin/EditCourse';
 import StudentDashboard from './pages/Student/StudentDashboard';
 import Unauthorized from './pages/Unauthorized';
+import StudentAttendence from './pages/Student/StudentAttendance';
+import AdminCreateMeeting from './pages/Admin/AdminCreateMeeting';
+import AdminEditMeeting from './pages/Admin/AdminEditMeeting';
+import StudentLectures from './pages/Student/StudentLectures';
 
 // Create a wrapper component to handle navigation
 const AppContent = () => {
@@ -86,9 +90,29 @@ const AppContent = () => {
           <EditCourse/>
         </PrivateRoute>
       }/> {/* admin */}
+      <Route path='/admin_create_meeting' element={
+        <PrivateRoute allowedRoles={["001"]}>
+          <AdminCreateMeeting/>
+        </PrivateRoute>
+      }/> {/* admin */}
+      <Route path='/admin_edit_meeting/:id' element={
+        <PrivateRoute allowedRoles={["001"]}>
+          <AdminEditMeeting/>
+        </PrivateRoute>
+      }/> {/* admin */}
       <Route path='/student_dashboard' element={
        <PrivateRoute allowedRoles={["002"]}>
         <StudentDashboard/>
+       </PrivateRoute>
+      }/>  {/* student */}
+      <Route path='/student_attendance' element={
+       <PrivateRoute allowedRoles={["002"]}>
+        <StudentAttendence/>
+       </PrivateRoute>
+      }/>  {/* student */}
+      <Route path='/student_lectures' element={
+       <PrivateRoute allowedRoles={["002"]}>
+        <StudentLectures/>
        </PrivateRoute>
       }/>  {/* student */}
       <Route path='/unauthorized' element={

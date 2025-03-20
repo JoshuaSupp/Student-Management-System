@@ -44,8 +44,8 @@ function Home() {
     }
     }, [deleted])
     
-    function handleDelete(id: any){
-        axios.delete(`/api/delete/${id}`)
+    function handleDelete(student_id: any){
+        axios.delete(`/api/delete/${student_id}`)
         .then((res)=>{
             setDeleted(true)
         })
@@ -66,7 +66,7 @@ function Home() {
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <Link to="/" className="btn btn-outline-success btn-sm">🏠 Log Out</Link>
-                        <Link className="btn btn-success" to="/createstudent">
+                        <Link className="btn btn-success" to="/createstudent" id='addStudent'>
                             + Add Student
                         </Link>
                     </div>
@@ -114,7 +114,7 @@ function Home() {
                                                     confirmButtonText: "Yes, delete it!"
                                                     }).then((result) => {
                                                     if (result.isConfirmed) {
-                                                        handleDelete(student.id);
+                                                        handleDelete(student.student_id);
                                                         Swal.fire("Deleted!", "The student has been removed.", "success");
                                                     }
                                                     });

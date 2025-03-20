@@ -2,8 +2,10 @@
 import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import useInactivityLogout from './InactivityLogOut';
 
 const PrivateRoute = ({ children, allowedRoles }: { children: JSX.Element, allowedRoles: string[] }) => {
+  useInactivityLogout();
   const token = localStorage.getItem("token");
   const expiry = localStorage.getItem("token_expiry");
   const role_id = localStorage.getItem("role_id");
