@@ -36,42 +36,55 @@ const StudentAttendance = () => {
   return (
     <div>
     <StudentNavbar/>
-        <div>
-           
-            <div  className="container mx-auto p-6">
-            <div className="w-full max-w-4xl ">
-            <h1 className="text-2xl font-bold mb-4">Lecture Attendance</h1>
-             {/* Attendance  Table */}
-             {attendance.length > 0 && (
-                 <div className="overflow-x-auto">
-                 <table className="w-full border-collapse border border-gray-200 shadow-md rounded-lg">
-                   <thead>
-                     <tr className="bg-gray-200 text-gray-700">
-                       <th className="border p-3">Lecture</th>
-                       <th className="border p-3">Lecture Date & Time</th>
-                       <th className="border p-3">Lecture Joined Date & Time</th>
-                       <th className="border p-3">Present/Absent</th>
-                     </tr>
-                   </thead>
-                   <tbody>
+        <div>         
+        <div className="container mt-4">
+  <div className="mx-auto" style={{ maxWidth: "900px" }}>
+    <h1 className="text-center fw-bold mb-4">Lecture Attendance</h1>
+
+    {/* Attendance Table */}
+    {attendance.length > 0 ? (
+      <div className="table-responsive">
+        <table className="table table-bordered table-striped shadow-sm">
+          <thead className="table-light">
+            <tr className="text-center">
+              <th>Lecture</th>
+              <th>Lecture Date & Time</th>
+              <th>Lecture Joined Date & Time</th>
+              <th>Present/Absent</th>
+            </tr>
+          </thead>
+          <tbody>
             {attendance
               .filter((attendance) => attendance.student_id === studentId)
               .map((attendance) => (
-                <tr key={attendance.id} className="text-center bg-white">
-                  <td className="border p-3">{attendance.lecture_title}</td>
-                  <td className="border p-3">{new Date(attendance.class_date).toLocaleString()}</td>
-                  <td className="border p-3">{attendance.joineddate_time
-                  ? new Date(attendance.joineddate_time).toLocaleString()
-                  : "Didn't join the class"} </td>
-                  <td className="border p-3">{attendance.present_absent}</td>
+                <tr key={attendance.id} className="text-center">
+                  <td>{attendance.lecture_title}</td>
+                  <td>{new Date(attendance.class_date).toLocaleString()}</td>
+                  <td>
+                    {attendance.joineddate_time
+                      ? new Date(attendance.joineddate_time).toLocaleString()
+                      : "Didn't join the class"}
+                  </td>
+                  <td
+                    className={
+                      attendance.present_absent === "Present"
+                        ? "text-success fw-bold"
+                        : "text-danger fw-bold"
+                    }
+                  >
+                    {attendance.present_absent}
+                  </td>
                 </tr>
               ))}
           </tbody>
-                 </table>
-               </div>
-             )}
-            </div>
-            </div>
+        </table>
+      </div>
+    ) : (
+      <p className="text-center text-muted">No attendance records found.</p>
+    )}
+  </div>
+</div>
+
         </div>
     </div>
   )

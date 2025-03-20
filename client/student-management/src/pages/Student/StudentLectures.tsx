@@ -119,50 +119,58 @@ const StudentLectures = () => {
   return (
   <div>
     <StudentNavbar />
-    <div  className="container mx-auto p-6">
-    <div className="w-full max-w-4xl ">
-    <h1 className="text-2xl font-bold mb-4">Lectures</h1>
-    {/* Meeting List Table */}
-    {meetings.length > 0 && (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-gray-200 shadow-md rounded-lg">
-          <thead>
-            <tr className="bg-gray-200 text-gray-700">
-              <th className="border p-3">Title</th>
-              <th className="border p-3">Start Time</th>
-              <th className="border p-3">End Time</th>
-              <th className="border p-3">Course</th>
-              <th className="border p-3">Google Meet Link</th>
-            </tr>
-          </thead>
-          <tbody>
-            {meetings
-              .filter((meeting) => meeting.course_id === studentCourseId)
-              .map((meeting) => (
-                <tr key={meeting.id} className="text-center bg-white">
-                  <td className="border p-3">{meeting.title}</td>
-                  <td className="border p-3">{new Date(meeting.start).toLocaleString()}</td>
-                  <td className="border p-3">{new Date(meeting.end).toLocaleString()}</td>
-                  <td className="border p-3">{meeting.course_name || "N/A"}</td>
-                  <td className="border p-3">
-                    <a
-                      href={meeting.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700 underline"
-                      onClick={() => markAttendance( meeting)}
-                    >
-                      Join Meeting
-                    </a>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-    )}
+    <div className="container mt-4">
+  <div className="row justify-content-center">
+    <div className="col-lg-8">
+      <h1 className="text-center mb-4">Lectures</h1>
+
+      {/* Meeting List Table */}
+      {meetings.length > 0 && (
+        <div className="table-responsive">
+          <table className="table table-bordered table-striped shadow-sm">
+            <thead className="table-light">
+              <tr className="text-center">
+                <th>Title</th>
+                <th>Start Time</th>
+                <th>End Time</th>
+                <th>Course</th>
+                <th>Google Meet Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {meetings
+                .filter((meeting) => meeting.course_id === studentCourseId)
+                .map((meeting) => (
+                  <tr key={meeting.id} className="text-center">
+                    <td>{meeting.title}</td>
+                    <td>{new Date(meeting.start).toLocaleString()}</td>
+                    <td>{new Date(meeting.end).toLocaleString()}</td>
+                    <td>{meeting.course_name || "N/A"}</td>
+                    <td>
+                      {new Date() >= new Date(meeting.start) && new Date() <= new Date(meeting.end) ? (
+                        <a
+                          href={meeting.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => markAttendance(meeting)}
+                        >
+                          Join Meeting
+                        </a>
+                      ) : (
+                        <span className="text-danger fw-bold">Cannot join this lecture</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
-    </div>
+  </div>
+</div>
+
 
   </div>
   )

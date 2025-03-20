@@ -480,24 +480,6 @@ app.get("/api/student_counts", (req, res) => {
 });
 
 //API to get attendance
-// app.get("/api/student_attendance", (req, res) => {
-//   db.query(
-//     `SELECT id, 
-//       student_id,
-//       DATE_FORMAT(joineddate_time, '%Y-%m-%d %H:%i:%s') AS joineddate_time, 
-//       DATE_FORMAT(class_date, '%Y-%m-%d %H:%i:%s') AS class_date, 
-//       present_absent
-//      FROM student_attendance`,  
-//     (err, results) => {
-//       if (err) {
-//         console.error("❌ Database Error:", err);
-//         return res.status(500).json({ error: "Database Error", details: err });
-//       }
-//       res.json(results); 
-//     }
-//   );
-// });
-
 app.get("/api/student_attendance", (req, res) => {
   const sql = `
     SELECT 
