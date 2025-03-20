@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken'); // Ensure JWT is imported
 const fs = require("fs");
 const moment = require("moment-timezone"); 
 const { google } = require("googleapis");
+const nodemailer = require('nodemailer');
 require('dotenv').config();  
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
 
@@ -127,27 +128,70 @@ app.post("/api/create_meet", async (req, res) => {
 });
 
 //API to create student
-app.post('/api/add_student', (req, res) => {
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_SENDER, 
+    pass: process.env.EMAIL_PASSWORD, 
+  },
+});
+
+function sendPasswordEmail(toEmail, password) {
+  const mailOptions = {
+    from: 'joshuasupp@gmail.com',
+    to: toEmail,
+    subject: 'Your Student Login Credentials',
+    text: `Hello Welcome to Devxl Institue!!,\nYour student account has been created.\nYour Email is: ${toEmail} \nYour temporary password is: ${password}\n\nThank you!`,
+  };
+
+  transporter.sendMail(mailOptions, (err, info) => {
+    if (err) {
+      console.error('Error sending email:', err);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+}
+
+app.post('/api/add_student', async (req, res) => {
   const { student_id, first_name, email, age, gender, studentcourse_id } = req.body;
 
   if (!student_id || !first_name || !email || !age || !gender || !studentcourse_id) {
-      return res.status(400).json({ error: 'All fields are required' });
+    return res.status(400).json({ error: 'All fields are required' });
   }
 
-  const insertQuery = `
-      INSERT INTO student_details (student_id, first_name, email, age, gender, studentcourse_id, role_id) 
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-  `;
+  // Generate a 4-character random password
+  const generatePassword = () => Math.random().toString(36).slice(-4);
+  const plainPassword = generatePassword(); // Example: "x7y9"
 
-  const role_id = "002";
+  try {
+    // Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(plainPassword, saltRounds);
 
-  db.query(insertQuery, [student_id, first_name, email, age, gender, studentcourse_id,role_id], (err, result) => {
+    const role_id = "002";
+
+    const insertQuery = `
+      INSERT INTO student_details (student_id, first_name, email, age, gender, studentcourse_id, role_id, password) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    db.query(insertQuery, [student_id, first_name, email, age, gender, studentcourse_id, role_id, hashedPassword], (err, result) => {
       if (err) {
-          console.error('Error inserting student:', err);
-          return res.status(500).json({ error: 'Failed to add student' });
+        console.error('Error inserting student:', err);
+        return res.status(500).json({ error: 'Failed to add student' });
       }
-      res.json({ message: 'Student added successfully', studentId: result.insertId });
-  });
+
+      // ✅ Send the password via email
+      sendPasswordEmail(email, plainPassword);
+
+      res.json({ message: 'Student added successfully. Check email for login credentials.' });
+    });
+
+  } catch (error) {
+    console.error('Error hashing password:', error);
+    res.status(500).json({ error: 'Server error while hashing password' });
+  }
 });
 
 //API to add a course
@@ -195,58 +239,6 @@ app.post("/api/mark_attendance", (req, res) => {
   });
 });
 
-// app.post("/api/mark_attendance", (req, res) => {
-//   const { student_id, course_id, joineddate_time, class_date, present_absent } = req.body;
-
-//   if (!student_id || !course_id || !joineddate_time || !class_date || !present_absent) {
-//     return res.status(400).json({ message: "All fields are required" });
-//   }
-
-//   // Check if student exists before processing
-//   db.query("SELECT * FROM student_details WHERE student_id = ?", [student_id], (err, studentExists) => {
-//     if (err) {
-//       console.error("Database error:", err);
-//       return res.status(500).json({ message: "Database error" });
-//     }
-
-//     if (studentExists.length === 0) {
-//       return res.status(400).json({ message: "Invalid student ID. Student does not exist." });
-//     }
-
-//     // Validate if student is enrolled in the course
-//     db.query(
-//       "SELECT * FROM student_details WHERE student_id = ? AND studentcourse_id = ?",
-//       [student_id, course_id],
-//       (err, checkEnrollment) => {
-//         if (err) {
-//           console.error("Database error:", err);
-//           return res.status(500).json({ message: "Database error" });
-//         }
-
-//         if (checkEnrollment.length === 0) {
-//           return res.status(400).json({ message: "Student is not enrolled in this course" });
-//         }
-
-//         const formattedJoinedDate = convertToLocalTime(joineddate_time, "Asia/Kuala_Lumpur");
-//         const formattedClassDate = convertToLocalTime(class_date, "Asia/Kuala_Lumpur");
-
-//         // Insert attendance record
-//         db.query(
-//           `INSERT INTO student_attendance (student_id, course_id, joineddate_time, class_date, present_absent)
-//            VALUES (?, ?, ?, ?, ?)`,
-//           [student_id, course_id, formattedJoinedDate, formattedClassDate, present_absent],
-//           (err, result) => {
-//             if (err) {
-//               console.error("Database error:", err);
-//               return res.status(500).json({ message: "Failed to mark attendance" });
-//             }
-//             res.json({ message: "Attendance marked successfully" });
-//           }
-//         );
-//       }
-//     );
-//   });
-// });
 
 // 📌 CRON Job to mark absences for missed classes
 cron.schedule("*/1 * * * *", () => {
@@ -657,64 +649,88 @@ app.delete("/api/course_delete/:id", (req, res) => {
 
 //login with session
 const secretKey = process.env.JWT_SECRET_KEY;
-app.post("/api/login", (req, res) => {
+
+app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
 
-  // Check the admin table first
-  db.query("SELECT * FROM admin WHERE email = ?", [email], (err, result) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ message: "Database error" });
-    }
-
-    if (result.length > 0) {
-      const admin = result[0];
-
-      if (password === admin.password) { // Replace with bcrypt if using hashed passwords
-        const token = jwt.sign({ userId: admin.id, role_id: admin.role_id }, secretKey, { expiresIn: "15m" });
-        return res.json({ message: "Admin login successful", token, role_id: admin.role_id });
-      } else {
-        return res.status(400).json({ message: "Incorrect password" });
-      }
-    }
-
-    // If not found in admin, check the student_details table
-    db.query("SELECT id, student_id, role_id, studentcourse_id, password FROM student_details WHERE email = ?", [email], (err, studentResult) => {
+  try {
+    // Check if user is an Admin
+    db.query("SELECT * FROM admin WHERE email = ?", [email], async (err, adminResult) => {
       if (err) {
         console.error("Database error:", err);
         return res.status(500).json({ message: "Database error" });
       }
 
-      if (studentResult.length > 0) {
-        const student = studentResult[0];
+      if (adminResult.length > 0) {
+        const admin = adminResult[0];
 
-        if (password === student.password) { // Use bcrypt if passwords are hashed
+        // Check if password is hashed
+        const isHashMatch = await bcrypt.compare(password, admin.password);
+        const isPlainMatch = password === admin.password; // Check if stored password is plain text
+
+        if (!isHashMatch && !isPlainMatch) {
+          return res.status(400).json({ message: "Incorrect password" });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+          { userId: admin.id, role_id: admin.role_id },
+          secretKey,
+          { expiresIn: "15m" }
+        );
+
+        return res.json({ message: "Admin login successful", token, role_id: admin.role_id });
+      }
+
+      // If not admin, check student_details
+      db.query("SELECT id, student_id, role_id, studentcourse_id, password FROM student_details WHERE email = ?", 
+      [email], 
+      async (err, studentResult) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({ message: "Database error" });
+        }
+
+        if (studentResult.length > 0) {
+          const student = studentResult[0];
+
+          // Check if password is hashed
+          const isHashMatch = await bcrypt.compare(password, student.password);
+          const isPlainMatch = password === student.password; // Check if stored password is plain text
+
+          if (!isHashMatch && !isPlainMatch) {
+            return res.status(400).json({ message: "Incorrect password" });
+          }
+
+          // Generate JWT token
           const token = jwt.sign(
-            { userId: student.id,student_id: student.student_id, role_id: student.role_id, studentcourse_id: student.studentcourse_id }, 
-            secretKey, 
+            { userId: student.id, student_id: student.student_id, role_id: student.role_id, studentcourse_id: student.studentcourse_id },
+            secretKey,
             { expiresIn: "15m" }
           );
 
-          return res.json({ 
-            message: "Student login successful", 
-            token, 
-            role_id: student.role_id, 
+          return res.json({
+            message: "Student login successful",
+            token,
+            role_id: student.role_id,
             studentcourse_id: student.studentcourse_id,
             student_id: student.student_id
           });
-        } else {
-          return res.status(400).json({ message: "Incorrect password" });
         }
-      }
-      return res.status(400).json({ message: "User not found" });
-    });
-  });
-});
 
+        return res.status(400).json({ message: "User not found" });
+      });
+    });
+
+  } catch (error) {
+    console.error("Server error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 const PORT = 5000;
 app.listen(PORT, () => {
