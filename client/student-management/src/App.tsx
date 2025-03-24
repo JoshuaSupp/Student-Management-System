@@ -19,6 +19,7 @@ import StudentAttendence from './pages/Student/StudentAttendance';
 import AdminCreateMeeting from './pages/Admin/AdminCreateMeeting';
 import AdminEditMeeting from './pages/Admin/AdminEditMeeting';
 import StudentLectures from './pages/Student/StudentLectures';
+import StudentProfile from './pages/Student/StudentProfile';
 
 // Create a wrapper component to handle navigation
 const AppContent = () => {
@@ -113,6 +114,11 @@ const AppContent = () => {
       <Route path='/student_lectures' element={
        <PrivateRoute allowedRoles={["002"]}>
         <StudentLectures/>
+       </PrivateRoute>
+      }/>  {/* student */}
+      <Route path='/student_profile' element={
+       <PrivateRoute allowedRoles={["002"]}>
+        <StudentProfile/>
        </PrivateRoute>
       }/>  {/* student */}
       <Route path='/unauthorized' element={

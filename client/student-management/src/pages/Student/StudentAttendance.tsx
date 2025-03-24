@@ -44,13 +44,13 @@ const StudentAttendance = () => {
     {/* Attendance Table */}
     {attendance.length > 0 ? (
       <div className="table-responsive">
-        <table className="table table-bordered table-striped shadow-sm">
-          <thead className="table-light">
+        <table className="table table-bordered table-striped table-hover shadow-sm">
+          <thead className="table-dark text-light">
             <tr className="text-center">
-              <th>Lecture</th>
-              <th>Lecture Date & Time</th>
-              <th>Lecture Joined Date & Time</th>
-              <th>Present/Absent</th>
+              <th className="p-3">Lecture</th>
+              <th className="p-3">Lecture Date & Time</th>
+              <th className="p-3">Lecture Joined Date & Time</th>
+              <th className="p-3">Present/Absent</th>
             </tr>
           </thead>
           <tbody>
@@ -58,7 +58,7 @@ const StudentAttendance = () => {
               .filter((attendance) => attendance.student_id === studentId)
               .map((attendance) => (
                 <tr key={attendance.id} className="text-center">
-                  <td>{attendance.lecture_title}</td>
+                  <td className="fw-bold text-primary">{attendance.lecture_title}</td>
                   <td>{new Date(attendance.class_date).toLocaleString()}</td>
                   <td>
                     {attendance.joineddate_time

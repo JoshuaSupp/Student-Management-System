@@ -11,6 +11,8 @@ const fs = require("fs");
 const moment = require("moment-timezone"); 
 const { google } = require("googleapis");
 const nodemailer = require('nodemailer');
+const multer = require('multer');
+const path = require('path');
 require('dotenv').config();  
 const jwtSecretKey = process.env.JWT_SECRET_KEY;
 
@@ -28,6 +30,25 @@ oauth2Client.setCredentials({
 });
 
 const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+
+const uploadPath = path.join(__dirname, 'uploads');
+// Check if folder exists and create it if it doesn't
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+  console.log('Profile pictures folder created');
+}
+
+// Set up Multer storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Save file with a timestamp as name
+  },
+});
+
+const upload = multer({ storage });
 
 //Create MySQL connection
 const db = mysql.createConnection({
@@ -419,7 +440,7 @@ app.get("/api/students", (req, res) => {
     });
   });
  
-//API to get specific student
+//API to get specific student from if
 app.get("/api/get_student/:id", (req, res) => {
     const id = req.params.id;
     const sql = "SELECT * FROM student_details WHERE `id`= ?";
@@ -428,6 +449,16 @@ app.get("/api/get_student/:id", (req, res) => {
       return res.json(result);
     });
   });
+
+//API to get specific student from student id
+app.get("/api/getstudent_studentid/:student_id", (req, res) => {
+  const student_id = req.params.student_id;
+  const sql = "SELECT * FROM student_details WHERE `student_id`= ?";
+  db.query(sql, [student_id], (err, result) => {
+    if (err) res.json({ message: "Server error" });
+    return res.json(result);
+  });
+});
 
 //API to get specific course
 app.get("/api/get_course/:id", (req, res) => {
@@ -539,6 +570,13 @@ app.get("/api/student_attendance/:student_id", (req, res) => {
   });
 });
 
+//API to get profile pic
+app.get('/api/uploads/:filename', (req, res) => {
+  const filename = req.params.filename;
+  const filepath = path.join(__dirname, 'uploads', filename);
+  res.sendFile(filepath);
+});
+
 
 //API to edit student
 app.post("/api/edit_user/:id", (req, res) => {
@@ -577,6 +615,27 @@ app.post("/api/edit_course/:id", (req, res) => {
     return res.json({ success: "Course updated successfully" });
   });
 });
+
+// Image upload route
+app.post('/api/uploadProfilePic/:studentId', upload.single('profile_pic'), (req, res) => {
+  const { studentId } = req.params;
+  const imageUrl = `/uploads/${req.file.filename}`;
+
+  // Save the file path to the student table in the database
+  const query = `UPDATE student_details SET profile_pic = ? WHERE student_id = ?`;
+  db.query(query, [imageUrl, studentId], (err, result) => {
+    if (err) {
+      console.error('Error saving profile picture:', err);
+      return res.status(500).send('Error uploading image');
+    }
+
+    return res.status(200).json({ message: 'Profile picture uploaded successfully', imageUrl });
+  });
+});
+
+// Serve the uploaded images (make sure the 'uploads' folder is publicly accessible)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 //API to edit meetings
 app.put('/api/edit_meetings/:id', (req, res) => {
